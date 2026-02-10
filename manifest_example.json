@@ -1,0 +1,7 @@
+{
+  "version": "1.1.0",
+  "release_date": "2026-02-01",
+  "description": "Contoh paket update. Deskripsikan perubahan di sini.",
+  "author": "Tim Pengembang",
+  "requires_db_update": true
+}

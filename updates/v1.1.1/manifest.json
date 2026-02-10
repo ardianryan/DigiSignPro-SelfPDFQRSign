@@ -1,0 +1,11 @@
+{
+  "version": "1.1.1",
+  "release_date": "2026-02-05",
+  "description": "Perbaikan Bulk Sign: respons JSON konsisten dan penanganan error di frontend.",
+  "author": "Trae AI",
+  "files": [
+    "views/sign/bulk.php",
+    "views/sign/preview_bulk.php",
+    "views/sign/process_bulk.php"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "version": "1.1.2",
+  "release_date": "2026-02-10",
+  "description": "Aktifkan drag & drop upload; perbaikan format dan perataan keterangan QR.",
+  "author": "Trae AI",
+  "files": [
+    "README.md",
+    "views/sign/single.php",
+    "views/sign/bulk.php",
+    "views/sign/qr_create.php",
+    "views/sign/process_single.php",
+    "views/sign/process_bulk.php"
+  ]
+}

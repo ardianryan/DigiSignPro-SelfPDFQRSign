@@ -1,0 +1,13 @@
+{
+  "version": "1.1.0",
+  "release_date": "2026-01-28",
+  "description": "Menambahkan fitur Backup & Restore (Database & Media)",
+  "author": "Trae AI",
+  "files": [
+    "views/admin/backup.php",
+    "views/admin/process_backup.php",
+    "views/admin/process_restore.php",
+    "includes/sidebar.php",
+    "public/index.php"
+  ]
+}

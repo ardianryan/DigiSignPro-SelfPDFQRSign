@@ -1,0 +1,10 @@
+{
+    "require": {
+        "setasign/fpdf": "^1.8",
+        "setasign/fpdi": "^2.6",
+        "chillerlan/php-qrcode": "^5.0",
+        "phpmailer/phpmailer": "^7.0",
+        "setasign/fpdi-protection": "^2.1",
+        "tecnickcom/tcpdf": "^6.10"
+    }
+}
