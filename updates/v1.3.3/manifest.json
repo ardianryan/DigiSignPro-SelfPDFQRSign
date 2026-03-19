@@ -1,0 +1,11 @@
+{
+  "version": "1.3.3",
+  "name": "Storage Transparency Update",
+  "description": "Menampilkan informasi bucket dan direktori aktif di Manajemen Storage untuk memudahkan pengecekan data.",
+  "release_date": "2026-03-19",
+  "files": [
+    "includes/Storage.php",
+    "views/admin/storage.php",
+    "README.md"
+  ]
+}
