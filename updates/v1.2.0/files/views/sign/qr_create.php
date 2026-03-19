@@ -138,9 +138,6 @@ if ($step == 3 && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Use FPDI to protect
                 try {
-                    ini_set('display_errors', 0);
-                    error_reporting(0);
-                    
                     $pdf = new FpdiProtection('P', 'mm', 'A4', true);
                     $pageCount = $pdf->setSourceFile($file['tmp_name']);
                     
@@ -156,7 +153,7 @@ if ($step == 3 && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                     $pdf->Output('F', $target_file);
                     $uploadSuccess = true;
-                } catch (Throwable $e) {
+                } catch (Exception $e) {
                     $error = "Gagal memproses proteksi PDF: " . $e->getMessage();
                     $uploadSuccess = false;
                 }
@@ -178,7 +175,7 @@ if ($step == 3 && $_SERVER['REQUEST_METHOD'] === 'POST') {
                         $stmt->execute();
                         
                         $success = "Dokumen berhasil diunggah dan disimpan.";
-                    } catch (Throwable $e) {
+                    } catch (Exception $e) {
                         $error = "Gagal menyimpan file: " . $e->getMessage();
                     }
                 }

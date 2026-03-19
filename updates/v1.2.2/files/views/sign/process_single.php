@@ -202,10 +202,6 @@ try {
     $pdf->Output('F', $tempSigned);
 
     // 4. Upload to Storage (Local, S3, or Both)
-    $safe_subject = preg_replace('/[^A-Za-z0-9_-]/', '_', $docSubject);
-    if (empty($safe_subject)) $safe_subject = 'document';
-    $filename = $safe_subject . '_' . $code . '_signed.pdf';
-    
     $outputPath = Storage::upload($conn, $tempSigned, $filename);
     
     // Clean up signed temp

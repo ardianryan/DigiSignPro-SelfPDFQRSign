@@ -1,0 +1,15 @@
+{
+  "version": "1.3.0",
+  "name": "S3 Public URL & Production Hardening",
+  "description": "Fitur S3 Public URL, perbaikan penamaan file, dan penguatan sistem (Hardening) untuk lingkungan produksi.",
+  "release_date": "2026-03-19",
+  "files": [
+    "includes/Storage.php",
+    "views/admin/settings.php",
+    "views/sign/process_single.php",
+    "views/sign/process_bulk.php",
+    "views/sign/qr_create.php",
+    "README.md",
+    "vendor/"
+  ]
+}

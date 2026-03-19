@@ -1,0 +1,17 @@
+{
+  "version": "1.2.1",
+  "name": "S3-R2 Storage Manager & Enhancements",
+  "description": "Menambahkan dukungan S3/Cloudflare R2, Dashboard Manajemen Storage, dan Fitur Test Connection.",
+  "release_date": "2026-03-19",
+  "files": [
+    "includes/Storage.php",
+    "includes/sidebar.php",
+    "views/admin/settings.php",
+    "views/admin/storage.php",
+    "views/history.php",
+    "views/sign/process_single.php",
+    "views/sign/process_bulk.php",
+    "views/sign/qr_create.php",
+    "public/index.php"
+  ]
+}

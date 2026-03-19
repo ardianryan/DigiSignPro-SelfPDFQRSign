@@ -68,12 +68,6 @@ Setiap paket update harus berupa file ZIP yang berisi:
 
 ## 📝 Changelog
 
-### v1.3.1 (Bugfix Update) - 2026-03-19
-**Perbaikan Bug:**
-- **S3 URL Handling**: Perbaikan logika deteksi `s3://` dan penanganan full URL untuk mencegah malformed URL (double domain).
-- **History Delete Fix**: Perbaikan error "Undefined variable: stmt" saat menghapus riwayat dokumen secara satuan.
-- **Robust Delete**: Peningkatan error handling saat menghapus file di S3/R2.
-
 ### v1.3.0 (Feature Update) - 2026-03-19
 **Fitur Baru & Perbaikan:**
 - **S3/R2 Public URL**: Pemisahan antara Endpoint API S3 dan URL Publik untuk akses file. Berguna untuk Cloudflare R2 dengan custom domain atau public bucket URL.

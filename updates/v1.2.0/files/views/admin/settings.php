@@ -157,8 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['action'])) {
         $fields[] = "s3_access_key=?";
         $fields[] = "s3_secret_key=?";
         $fields[] = "s3_directory=?";
-        $fields[] = "s3_public_url=?";
-        $types .= "ssssssss";
+        $types .= "sssssss";
         $params[] = $_POST['storage_mode'] ?? 'local';
         $params[] = $_POST['s3_endpoint'] ?? NULL;
         $params[] = $_POST['s3_region'] ?? 'us-east-1';
@@ -166,7 +165,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['action'])) {
         $params[] = $_POST['s3_access_key'] ?? NULL;
         $params[] = $_POST['s3_secret_key'] ?? NULL;
         $params[] = $_POST['s3_directory'] ?? 'digisign/';
-        $params[] = $_POST['s3_public_url'] ?? NULL;
         
         $sql = "UPDATE app_settings SET " . implode(", ", $fields) . " WHERE id=1";
         $stmt = $conn->prepare($sql);
@@ -346,7 +344,6 @@ $settings = $result->fetch_assoc();
                         directory: '<?php echo htmlspecialchars($settings['s3_directory'] ?? 'digisign/'); ?>',
                         access_key: '<?php echo htmlspecialchars($settings['s3_access_key'] ?? ''); ?>',
                         secret_key: '<?php echo htmlspecialchars($settings['s3_secret_key'] ?? ''); ?>',
-                        public_url: '<?php echo htmlspecialchars($settings['s3_public_url'] ?? ''); ?>',
                         testing: false,
                         async testS3Connection() {
                             if (!this.endpoint || !this.bucket || !this.access_key || !this.secret_key) {
@@ -396,13 +393,8 @@ $settings = $result->fetch_assoc();
                         <div x-show="mode !== 'local'" x-transition>
                             <div class="space-y-4 pt-2">
                                 <div>
-                                    <label class="block text-sm font-medium text-slate-700 mb-1">Endpoint API URL</label>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Endpoint URL</label>
                                     <input type="text" name="s3_endpoint" x-model="endpoint" placeholder="https://<account_id>.r2.cloudflarestorage.com" class="w-full border border-slate-300 rounded-lg px-4 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-slate-700 mb-1">Public File URL (Optional)</label>
-                                    <input type="text" name="s3_public_url" x-model="public_url" placeholder="https://pub-abc.r2.dev atau https://cdn.domain.com" class="w-full border border-slate-300 rounded-lg px-4 py-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
-                                    <p class="text-[10px] text-slate-400 mt-1 italic">Gunakan jika URL untuk akses file berbeda dengan endpoint API S3.</p>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-slate-700 mb-1">Bucket Name</label>

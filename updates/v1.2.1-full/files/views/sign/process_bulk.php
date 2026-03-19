@@ -256,10 +256,6 @@ for ($i = 0; $i < $inputZip->numFiles; $i++) {
         $pdf->Output('F', $tempSigned);
 
         // Upload to Storage
-        $safe_subject = preg_replace('/[^A-Za-z0-9_-]/', '_', $subject);
-        if (empty($safe_subject)) $safe_subject = 'bulk';
-        $signedFilename = $safe_subject . '_' . $verifyCode . '_signed.pdf';
-        
         $systemPath = Storage::upload($conn, $tempSigned, $signedFilename);
 
         // Add to Output ZIP (Always give the user the file in ZIP)

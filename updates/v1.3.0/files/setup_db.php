@@ -98,8 +98,7 @@ $sql_settings = "CREATE TABLE IF NOT EXISTS app_settings (
     s3_bucket VARCHAR(100) DEFAULT NULL,
     s3_access_key VARCHAR(255) DEFAULT NULL,
     s3_secret_key VARCHAR(255) DEFAULT NULL,
-    s3_directory VARCHAR(100) DEFAULT 'digisign/',
-    s3_public_url VARCHAR(255) DEFAULT NULL
+    s3_directory VARCHAR(100) DEFAULT 'digisign/'
 )";
 // Added max_upload columns which were used in settings.php
 
@@ -140,7 +139,7 @@ if ($conn->query($sql_settings) === TRUE) {
     }
 
     // Insert default settings if not exists
-    $conn->query("INSERT IGNORE INTO app_settings (id, app_name, maintenance_mode, registration_open, max_upload_size, max_upload_size_bulk, max_prefix_length, timezone, storage_mode, s3_directory, s3_public_url) VALUES (1, 'DigiSign Pro', 0, 1, 10485760, 52428800, 3, 'Asia/Jakarta', 'local', 'digisign/', NULL)");
+    $conn->query("INSERT IGNORE INTO app_settings (id, app_name, maintenance_mode, registration_open, max_upload_size, max_upload_size_bulk, max_prefix_length, timezone, storage_mode, s3_directory) VALUES (1, 'DigiSign Pro', 0, 1, 10485760, 52428800, 3, 'Asia/Jakarta', 'local', 'digisign/')");
 } else {
     echo "Error creating table 'app_settings': " . $conn->error . "\n";
 }
@@ -149,13 +148,12 @@ if ($conn->query($sql_settings) === TRUE) {
 $sql_signatures = "CREATE TABLE IF NOT EXISTS signatures (
     id INT(11) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id INT(11) UNSIGNED NOT NULL,
-    signature_type ENUM('digital', 'qr_manual') DEFAULT 'digital',
     batch_id VARCHAR(50) DEFAULT NULL,
-    document_name VARCHAR(255) DEFAULT NULL,
+    document_name VARCHAR(255) NOT NULL,
     document_number VARCHAR(100) DEFAULT NULL,
     document_subject TEXT DEFAULT NULL,
     document_attachment VARCHAR(255) DEFAULT NULL,
-    file_path VARCHAR(255) DEFAULT NULL,
+    file_path VARCHAR(255) NOT NULL,
     verify_code VARCHAR(100) NOT NULL UNIQUE,
     signed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -165,7 +163,20 @@ $sql_signatures = "CREATE TABLE IF NOT EXISTS signatures (
 if ($conn->query($sql_signatures) === TRUE) {
     echo "Table 'signatures' checked/created.\n";
     
-    // Already handled in CREATE TABLE statement
+    // Check and add signature_type column if it doesn't exist
+    $check_col = $conn->query("SHOW COLUMNS FROM signatures LIKE 'signature_type'");
+    if ($check_col->num_rows == 0) {
+        $conn->query("ALTER TABLE signatures ADD COLUMN signature_type ENUM('digital', 'qr_manual') DEFAULT 'digital' AFTER user_id");
+        echo "Added 'signature_type' column to 'signatures' table.\n";
+    }
+
+    // Make file_path NULLABLE
+    $conn->query("ALTER TABLE signatures MODIFY file_path VARCHAR(255) NULL");
+    echo "Modified 'file_path' to be NULLABLE in 'signatures' table.\n";
+
+    // Make document_name NULLABLE
+    $conn->query("ALTER TABLE signatures MODIFY document_name VARCHAR(255) NULL");
+    echo "Modified 'document_name' to be NULLABLE in 'signatures' table.\n";
 
 } else {
     echo "Error creating table 'signatures': " . $conn->error . "\n";

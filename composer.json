@@ -5,6 +5,7 @@
         "chillerlan/php-qrcode": "^5.0",
         "phpmailer/phpmailer": "^7.0",
         "setasign/fpdi-protection": "^2.1",
-        "tecnickcom/tcpdf": "^6.10"
+        "tecnickcom/tcpdf": "^6.10",
+        "aws/aws-sdk-php": "^3.373"
     }
 }

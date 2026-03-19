@@ -22,16 +22,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             
             if ($res_get->num_rows > 0) {
                 $file_data = $res_get->fetch_assoc();
-                
-                $stmt = $conn->prepare("DELETE FROM signatures WHERE id = ?");
-                $stmt->bind_param("i", $id);
-                
                 if ($stmt->execute()) {
                     // Delete physical file via Storage helper
                     Storage::delete($conn, $file_data['file_path']);
                     $msg = "success|Data riwayat berhasil dihapus.";
                 } else {
-                    $msg = "error|Gagal menghapus data: " . $conn->error;
+                    $msg = "error|Gagal menghapus data.";
                 }
             }
         } elseif ($_POST['action'] === 'delete_batch') {
