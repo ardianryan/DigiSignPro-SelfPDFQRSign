@@ -1,0 +1,15 @@
+{
+  "version": "1.3.2",
+  "name": "Object Storage S3 & UI Enhancements",
+  "description": "Update komprehensif untuk S3/R2 Public URL, manajemen storage, perbaikan bug hapus, dan hardening sistem.",
+  "release_date": "2026-03-19",
+  "files": [
+    "includes/Storage.php",
+    "views/admin/settings.php",
+    "views/admin/storage.php",
+    "views/history.php",
+    "setup_db.php",
+    "README.md",
+    "vendor/"
+  ]
+}

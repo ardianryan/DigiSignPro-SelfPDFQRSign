@@ -68,7 +68,7 @@ Setiap paket update harus berupa file ZIP yang berisi:
 
 ## 📝 Changelog
 
-### v1.3.2 (Object Storage S3 & UI Enhancements) - 2026-03-19
+### v1.3.1 (Object Storage S3 & UI Enhancements) - 2026-03-19
 **Fitur Baru & Perbaikan:**
 - **S3/R2 Public URL**: Pemisahan antara Endpoint API S3 dan URL Publik untuk akses file. Berguna untuk Cloudflare R2 dengan custom domain atau public bucket URL.
 - **Manajemen Storage UI**: Halaman baru untuk memantau isi bucket S3, statistik penggunaan, dan transparansi direktori aktif.
