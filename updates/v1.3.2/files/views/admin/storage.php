@@ -56,7 +56,8 @@ function formatBytes($bytes, $precision = 2) {
 <div class="mb-8 flex justify-between items-center">
     <div>
         <h2 class="text-3xl font-bold text-slate-800">Manajemen Storage</h2>
-        <p class="text-slate-500 mt-1">Pantau dan kelola berkas yang tersimpan di Cloudflare R2 / S3.</p>
+        <p class="text-slate-500 mt-1">Pantau berkas di S3 Bucket: <span class="font-mono text-blue-600"><?php echo htmlspecialchars($stats['bucket'] ?? '-'); ?></span></p>
+        <p class="text-xs text-slate-400">Direktori aktif: <span class="font-mono"><?php echo htmlspecialchars(Storage::getSettings()['s3_directory'] ?? '/'); ?></span></p>
     </div>
     <div class="flex gap-3">
         <a href="<?php echo BASE_URL; ?>/admin/settings" class="bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2">

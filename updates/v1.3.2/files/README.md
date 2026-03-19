@@ -68,6 +68,11 @@ Setiap paket update harus berupa file ZIP yang berisi:
 
 ## 📝 Changelog
 
+### v1.3.3 (Transparency Update) - 2026-03-19
+**Peningkatan UI:**
+- **Storage Transparency**: Menampilkan Bucket dan Direktori S3 yang sedang aktif di halaman Manajemen Storage untuk memudahkan diagnosa konfigurasi.
+- **Improved Storage Class**: Penambahan fungsi `getSettings()` pada class Storage.
+
 ### v1.3.2 (Hotfix) - 2026-03-19
 **Perbaikan Bug:**
 - **Storage Management Blank Fix**: Perbaikan halaman Manajemen Storage yang tampil kosong karena kesalahan pemrosesan objek `DateTime` dari AWS SDK. Penambahan penanganan error yang lebih robust pada halaman ini.

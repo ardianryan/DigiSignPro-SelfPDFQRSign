@@ -1,2 +1,0 @@
--- Update SQL for v1.3.1
--- No database changes needed, only file fixes.
