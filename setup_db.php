@@ -19,23 +19,25 @@ $db_created = false;
 if ($conn->connect_error) {
     // 3. If connection failed, maybe DB doesn't exist. Try connecting to server only.
     echo "Could not connect to database '$database'. Attempting to create it...\n";
-    
+
     $conn = new mysqli($host, $username, $password);
-    
+
     if ($conn->connect_error) {
         die("CRITICAL ERROR: Connection to database server failed: " . $conn->connect_error . "\nVerify your credentials in config/credentials.php\n");
     }
-    
+
     // 4. Create Database
     $sql = "CREATE DATABASE IF NOT EXISTS $database";
     if ($conn->query($sql) === TRUE) {
         echo "Database '$database' created successfully or already exists.\n";
         $conn->select_db($database);
         $db_created = true;
-    } else {
+    }
+    else {
         die("CRITICAL ERROR: Could not create database '$database'.\nError: " . $conn->error . "\nIf you are on Shared Hosting, please create the database manually via cPanel and update config/credentials.php\n");
     }
-} else {
+}
+else {
     echo "Successfully connected to existing database '$database'.\n";
 }
 
@@ -61,7 +63,8 @@ $check_col = $conn->query("SHOW COLUMNS FROM users LIKE 'signature_prefix'");
 if ($check_col->num_rows == 0) {
     $conn->query("ALTER TABLE users ADD COLUMN signature_prefix VARCHAR(9) DEFAULT 'DS' AFTER signature_path");
     echo "Added 'signature_prefix' column to 'users' table.\n";
-} else {
+}
+else {
     // Widen column if existing length is less than 9
     $colInfo = $conn->query("SHOW COLUMNS FROM users LIKE 'signature_prefix'")->fetch_assoc();
     $type = $colInfo['Type'] ?? 'varchar(3)';
@@ -77,7 +80,8 @@ if ($check_col->num_rows == 0) {
 
 if ($conn->query($sql_users) === TRUE) {
     echo "Table 'users' checked/created.\n";
-} else {
+}
+else {
     echo "Error creating table 'users': " . $conn->error . "\n";
 }
 
@@ -105,7 +109,7 @@ $sql_settings = "CREATE TABLE IF NOT EXISTS app_settings (
 
 if ($conn->query($sql_settings) === TRUE) {
     echo "Table 'app_settings' checked/created.\n";
-    
+
     // Check and add max_prefix_length column if it doesn't exist (migration)
     $check_col = $conn->query("SHOW COLUMNS FROM app_settings LIKE 'max_prefix_length'");
     if ($check_col->num_rows == 0) {
@@ -141,7 +145,17 @@ if ($conn->query($sql_settings) === TRUE) {
 
     // Insert default settings if not exists
     $conn->query("INSERT IGNORE INTO app_settings (id, app_name, maintenance_mode, registration_open, max_upload_size, max_upload_size_bulk, max_prefix_length, timezone, storage_mode, s3_directory, s3_public_url) VALUES (1, 'DigiSign Pro', 0, 1, 10485760, 52428800, 3, 'Asia/Jakarta', 'local', 'digisign/', NULL)");
-} else {
+    
+    // Ensure existing record has default values for new columns if they are NULL
+    $conn->query("UPDATE app_settings SET 
+        max_upload_size_bulk = COALESCE(max_upload_size_bulk, 52428800),
+        max_prefix_length = COALESCE(max_prefix_length, 3),
+        timezone = COALESCE(timezone, 'Asia/Jakarta'),
+        storage_mode = COALESCE(storage_mode, 'local'),
+        s3_directory = COALESCE(s3_directory, 'digisign/')
+        WHERE id = 1");
+}
+else {
     echo "Error creating table 'app_settings': " . $conn->error . "\n";
 }
 
@@ -164,10 +178,11 @@ $sql_signatures = "CREATE TABLE IF NOT EXISTS signatures (
 
 if ($conn->query($sql_signatures) === TRUE) {
     echo "Table 'signatures' checked/created.\n";
-    
-    // Already handled in CREATE TABLE statement
 
-} else {
+// Already handled in CREATE TABLE statement
+
+}
+else {
     echo "Error creating table 'signatures': " . $conn->error . "\n";
 }
 

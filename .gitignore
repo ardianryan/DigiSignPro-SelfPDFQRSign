@@ -4,7 +4,7 @@
 .idea/
 
 # Dependencies
-vendor/
+/vendor/
 node_modules/
 
 # Runtime & uploads
@@ -13,6 +13,7 @@ public/uploads/**
 
 # Secrets & locks
 config/credentials.php
+config/.credentials.php
 config/installed.lock
 .env
 

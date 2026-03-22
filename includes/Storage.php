@@ -18,7 +18,16 @@ class Storage {
         if (self::$initialized) return;
         
         $result = $conn->query("SELECT * FROM app_settings WHERE id = 1");
-        self::$settings = $result->fetch_assoc();
+        $settings = $result ? $result->fetch_assoc() : null;
+        
+        // Sane defaults if column is missing or row is missing
+        self::$settings = array_merge([
+            'storage_mode' => 'local',
+            's3_bucket' => null,
+            's3_region' => 'us-east-1',
+            's3_directory' => 'digisign/'
+        ], (array)$settings);
+        
         self::$initialized = true;
     }
 

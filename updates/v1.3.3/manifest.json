@@ -25,6 +25,7 @@
     "views/sign/process_single.php",
     "views/history.php",
     "setup_db.php",
+    "install/process.php",
     "README.md",
     "vendor/"
   ]

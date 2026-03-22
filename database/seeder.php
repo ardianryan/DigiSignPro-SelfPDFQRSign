@@ -10,7 +10,7 @@ if ($conn->connect_error) {
 echo "Seeding database...\n";
 
 // 1. Create Admin
-$admin_email = 'admin@admin.com';
+$admin_email = 'admin@ppti.me';
 $admin_pass = password_hash('admin', PASSWORD_DEFAULT);
 $admin_name = 'Super Admin';
 $admin_role = 'admin';
@@ -21,7 +21,8 @@ $stmt->bind_param("sssss", $admin_name, $admin_email, $admin_pass, $admin_role, 
 
 if ($stmt->execute()) {
     echo "Admin user seeded successfully.\n";
-} else {
+}
+else {
     echo "Error seeding admin: " . $stmt->error . "\n";
 }
 
@@ -38,7 +39,8 @@ $stmt->bind_param("ssssss", $user_name, $user_email, $user_pass, $user_role, $us
 
 if ($stmt->execute()) {
     echo "Default user seeded successfully.\n";
-} else {
+}
+else {
     echo "Error seeding user: " . $stmt->error . "\n";
 }
 

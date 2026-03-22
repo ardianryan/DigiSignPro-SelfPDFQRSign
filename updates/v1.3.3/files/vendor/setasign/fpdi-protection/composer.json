@@ -1,0 +1,40 @@
+{
+    "name": "setasign/fpdi-protection",
+    "homepage": "https://github.com/Setasign/fpdi-protection",
+    "description": "A FPDI compatible version of the FPDF_Protection script.",
+    "type": "library",
+    "keywords": [
+        "pdf",
+        "fpdi",
+        "fpdf",
+        "protection",
+        "password"
+    ],
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "setasign\\FpdiProtection\\": "src/"
+        }
+    },
+    "require": {
+        "php": "^7.1 || ^8.0",
+        "ext-openssl": "*",
+        "setasign/fpdi": "^2.6.3",
+        "setasign/fpdf": "^1.8.6"
+    },
+    "authors": [
+        {
+            "name": "Jan Slabon",
+            "email": "jan.slabon@setasign.com",
+            "homepage": "https://www.setasign.com"
+        }
+    ],
+    "require-dev": {
+        "phpunit/phpunit": "~5.7"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "setasign\\FpdiProtection\\": "tests/"
+        }
+    }
+}
