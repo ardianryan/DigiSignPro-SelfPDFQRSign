@@ -477,6 +477,7 @@ $max_upload_mb = round($max_upload_size / 1048576);
                 submitData.append('document_attachment', this.formData.document_attachment); // Optional
                 submitData.append('signed_date', this.formData.signed_date);
                 submitData.append('pdf_password', this.formData.pdf_password);
+                submitData.append('csrf_token', '<?php echo get_csrf_token(); ?>');
                 submitData.append('show_qr_caption', this.formData.show_qr_caption ? 1 : 0);
                 submitData.append('qr_caption_position', this.formData.qr_caption_position);
 

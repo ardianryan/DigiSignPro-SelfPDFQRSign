@@ -5,6 +5,11 @@ require_once __DIR__ . '/../../includes/Storage.php';
 
 // Handle AJAX Test S3 Connection - MUST BE BEFORE ANY HTML OUTPUT
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'test_s3') {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        header('Content-Type: application/json');
+        echo json_encode(['status' => 'error', 'message' => 'CSRF Token Validation Failed.']);
+        exit;
+    }
     header('Content-Type: application/json');
     $testSettings = [
         's3_endpoint' => $_POST['s3_endpoint'] ?? '',
@@ -29,6 +34,9 @@ require_once __DIR__ . '/../../includes/sidebar.php';
 
 // Handle Delete Logo
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_logo') {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        die("CSRF Token Validation Failed.");
+    }
     $res = $conn->query("SELECT app_logo FROM app_settings WHERE id = 1");
     $cur = $res ? $res->fetch_assoc() : null;
     $logo_rel = $cur['app_logo'] ?? null;
@@ -48,6 +56,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
 // Handle Form Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['action'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        die("CSRF Token Validation Failed.");
+    }
     $app_name = $_POST['app_name'];
     $maintenance_mode = isset($_POST['maintenance_mode']) ? 1 : 0;
     $registration_open = isset($_POST['registration_open']) ? 1 : 0;
@@ -194,6 +205,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['action'])) {
 
 // Handle Clear Temp
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'clear_temp') {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        die("CSRF Token Validation Failed.");
+    }
     $tempDir = __DIR__ . '/../../public/uploads/temp/';
     $deletedCount = 0;
     
@@ -263,6 +277,7 @@ $settings = $result->fetch_assoc();
     <?php endif; ?>
 
     <form method="POST" enctype="multipart/form-data" class="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
+        <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <!-- Left Column: General Info -->
@@ -307,6 +322,7 @@ $settings = $result->fetch_assoc();
                         <?php if($settings['app_logo']): ?>
                             <img src="<?php echo BASE_URL . '/' . $settings['app_logo']; ?>" alt="Current Logo" class="h-12 w-auto object-contain bg-slate-100 rounded p-1">
                             <form method="POST" onsubmit="return confirm('Hapus logo aplikasi dan kembali ke default?');">
+                                <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
                                 <input type="hidden" name="action" value="delete_logo">
                                 <button type="submit" class="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-2 rounded text-xs font-medium transition-colors">
                                     Hapus Logo
@@ -368,6 +384,7 @@ $settings = $result->fetch_assoc();
                             this.testing = true;
                             const formData = new FormData();
                             formData.append('action', 'test_s3');
+                            formData.append('csrf_token', '<?php echo get_csrf_token(); ?>');
                             formData.append('s3_endpoint', this.endpoint);
                             formData.append('s3_region', this.region);
                             formData.append('s3_bucket', this.bucket);
@@ -480,6 +497,7 @@ $settings = $result->fetch_assoc();
             </div>
             
             <form method="POST" onsubmit="return confirm('Yakin ingin menghapus semua file temporary?');">
+                <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
                 <input type="hidden" name="action" value="clear_temp">
                 <button type="submit" class="bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>

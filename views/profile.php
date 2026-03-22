@@ -17,6 +17,9 @@ $max_prefix_len = $settings['max_prefix_length'] ?? 3;
 
 // Handle Form Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        die("CSRF Token Validation Failed.");
+    }
     if (isset($_POST['update_profile'])) {
         $name = trim($_POST['name']);
         $email = trim($_POST['email']);
@@ -153,6 +156,7 @@ if (empty($user['signature_prefix'])) {
         <h3 class="text-lg font-bold text-slate-800 mb-6 pb-2 border-b border-slate-100">Informasi Dasar</h3>
         
         <form method="POST">
+            <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Nama Lengkap</label>
@@ -202,6 +206,7 @@ if (empty($user['signature_prefix'])) {
         <h3 class="text-lg font-bold text-slate-800 mb-6 pb-2 border-b border-slate-100">Ganti Password</h3>
         
         <form method="POST">
+            <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Password Saat Ini</label>

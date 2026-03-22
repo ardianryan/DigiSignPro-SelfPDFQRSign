@@ -68,15 +68,16 @@ Setiap paket update harus berupa file ZIP yang berisi:
 
 ## 📝 Changelog
 
-### v1.3.2 (Object Storage S3 & UI Enhancements) - 2026-03-19
+### v1.3.2 (Object Storage S3 & Security Hardening) - 2026-03-22
 **Fitur Baru & Perbaikan:**
-- **S3/R2 Public URL**: Pemisahan antara Endpoint API S3 dan URL Publik untuk akses file. Berguna untuk Cloudflare R2 dengan custom domain atau public bucket URL.
-- **Manajemen Storage UI**: Halaman baru untuk memantau isi bucket S3, statistik penggunaan, dan transparansi direktori aktif.
-- **Auto-Migration DB**: Sistem secara otomatis mengecek dan menambahkan kolom database yang diperlukan saat menyimpan pengaturan.
-- **Bugfix S3 URL**: Memperbaiki konstruksi URL S3/R2 agar tidak terjadi double domain (malformed URL).
-- **Bugfix History Delete**: Memperbaiki error "Undefined variable: stmt" saat menghapus riwayat dokumen.
-- **Production Hardening**: Penangkapan error yang lebih aman (Throwable) untuk mencegah halaman blank di lingkungan produksi.
-- **Full SDK Package**: Paket update kini menyertakan folder `vendor` lengkap dengan AWS SDK untuk kemudahan instalasi.
+- **Security Hardening**: Proteksi CSRF di seluruh form, pengerasan cookie session (`HttpOnly`, `Secure`, `SameSite`), dan header `Cache-Control`.
+- **Cookie Consent**: Pop-up persetujuan cookie dengan desain premium glassmorphism.
+- **S3/R2 Public URL**: Pemisahan Endpoint API S3 dan URL Publik.
+- **Manajemen Storage UI**: Statistik penggunaan, file browser, dan transparansi direktori aktif.
+- **Auto-Migration DB**: Otomatis menambah kolom `s3_public_url` dan `s3_directory`.
+- **Bugfixes**: Perbaikan error `$stmt` riwayat dan malformed S3 URL (double domain).
+- **Production Hardening**: Penanganan error (Throwable) untuk stabilitas sistem.
+- **Full SDK Package**: AWS SDK sudah include dalam folder `vendor`.
 
 ### v1.3.0 (Feature Update) - 2026-03-19
 **Fitur Baru & Perbaikan:**

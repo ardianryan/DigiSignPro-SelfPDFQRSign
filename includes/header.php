@@ -1,3 +1,7 @@
+<?php
+require_once __DIR__ . '/security_functions.php';
+add_security_headers();
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>

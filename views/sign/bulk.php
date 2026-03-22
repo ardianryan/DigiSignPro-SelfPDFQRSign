@@ -253,6 +253,7 @@ $max_upload_bulk_mb = round($max_upload_bulk_size / 1048576);
                 this.isUploading = true;
                 const formData = new FormData();
                 formData.append('zip_file', file);
+                formData.append('csrf_token', '<?php echo get_csrf_token(); ?>');
 
                 try {
                     const response = await fetch('<?php echo BASE_URL; ?>/sign/preview_bulk', {
@@ -464,6 +465,7 @@ $max_upload_bulk_mb = round($max_upload_bulk_size / 1048576);
                 formData.append('base_number', this.formData.base_number);
                 formData.append('subject', this.formData.subject);
                 formData.append('pdf_password', this.formData.pdf_password);
+                formData.append('csrf_token', '<?php echo get_csrf_token(); ?>');
                 formData.append('show_qr_caption', this.formData.show_qr_caption ? 1 : 0);
                 formData.append('qr_caption_position', this.formData.qr_caption_position);
                 

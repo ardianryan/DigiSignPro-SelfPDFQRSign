@@ -58,6 +58,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+    if (ob_get_level()) { ob_end_clean(); }
+    echo json_encode(['status' => 'error', 'message' => 'CSRF Token Validation Failed.']);
+    exit;
+}
+
 $batchId = $_POST['batch_id'] ?? '';
 $x = floatval($_POST['x'] ?? 0);
 $y = floatval($_POST['y'] ?? 0);

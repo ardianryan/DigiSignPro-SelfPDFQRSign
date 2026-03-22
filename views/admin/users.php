@@ -11,6 +11,9 @@ $success_msg = '';
 $error_msg = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        die("CSRF Token Validation Failed.");
+    }
     // CREATE or UPDATE
     if (isset($_POST['action']) && ($_POST['action'] == 'create' || $_POST['action'] == 'update')) {
         $name = $_POST['name'];
@@ -162,6 +165,7 @@ $result = $conn->query("SELECT * FROM users ORDER BY created_at DESC");
 
             <div x-show="showModal" class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
                 <form method="POST" action="">
+                    <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                         <h3 class="text-lg leading-6 font-medium text-slate-900" x-text="editMode ? 'Edit User' : 'Tambah User Baru'"></h3>
                         
@@ -212,6 +216,7 @@ $result = $conn->query("SELECT * FROM users ORDER BY created_at DESC");
 
 <!-- Hidden form for delete -->
 <form id="deleteForm" method="POST" action="" style="display:none;">
+    <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
     <input type="hidden" name="action" value="delete">
     <input type="hidden" name="user_id" id="deleteUserId">
 </form>

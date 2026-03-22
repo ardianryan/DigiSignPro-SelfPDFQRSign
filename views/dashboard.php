@@ -15,6 +15,9 @@ $prefix_msg = '';
 $prefix_msg_type = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_prefix'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        die("CSRF Token Validation Failed.");
+    }
     $new_prefix = strtoupper(trim($_POST['signature_prefix']));
     $settings_result = $conn->query("SELECT max_prefix_length FROM app_settings WHERE id = 1");
     $settings = $settings_result->fetch_assoc();
@@ -106,6 +109,18 @@ if ($role === 'admin') {
     <h3 class="text-lg font-bold text-slate-800 mb-4">Akses Cepat</h3>
     <div class="flex flex-wrap gap-4">
         <?php if($role === 'user'): ?>
+            <div class="mt-6 bg-slate-50 p-4 rounded-lg border border-slate-200">
+                <h4 class="text-sm font-bold text-slate-700 mb-3">Update Prefix Tanda Tangan</h4>
+                <form method="POST" action="" class="flex gap-2">
+                    <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
+                    <input type="text" name="signature_prefix" value="<?php echo htmlspecialchars($current_prefix); ?>" placeholder="Prefix (e.g. DS)" maxlength="<?php echo $max_prefix_len ?? 3; ?>" class="border border-slate-300 rounded px-3 py-1 text-sm uppercase">
+                    <button type="submit" name="update_prefix" class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition-colors">Update</button>
+                </form>
+                <?php if($prefix_msg): ?>
+                    <p class="text-xs mt-2 <?php echo $prefix_msg_type === 'success' ? 'text-green-600' : 'text-red-600'; ?>"><?php echo $prefix_msg; ?></p>
+                <?php endif; ?>
+            </div>
+            
             <a href="<?php echo BASE_URL; ?>/sign/single" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">Buat Tanda Tangan Baru</a>
             <a href="<?php echo BASE_URL; ?>/history" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-lg transition-colors">Lihat Riwayat</a>
         <?php else: ?>

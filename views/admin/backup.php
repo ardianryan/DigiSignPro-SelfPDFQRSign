@@ -29,6 +29,7 @@ require_once __DIR__ . '/../../includes/sidebar.php';
         <p class="text-sm text-slate-500 mb-6">Pilih komponen yang ingin Anda backup. Hasil backup akan berupa file ZIP yang berisi data JSON (database) dan file media.</p>
 
         <form action="<?php echo BASE_URL; ?>/admin/process_backup" method="POST">
+            <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
             <div class="space-y-4 mb-6">
                 <label class="flex items-center space-x-3 p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
                     <input type="checkbox" name="backup_db" value="1" checked class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500">
@@ -148,6 +149,7 @@ function backupApp() {
 
             const formData = new FormData();
             formData.append('backup_file', this.file);
+            formData.append('csrf_token', '<?php echo get_csrf_token(); ?>');
             formData.append('restore_db', this.restoreDb ? '1' : '0');
             formData.append('restore_media', this.restoreMedia ? '1' : '0');
 

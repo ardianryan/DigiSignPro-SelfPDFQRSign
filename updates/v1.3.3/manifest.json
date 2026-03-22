@@ -1,0 +1,33 @@
+{
+  "version": "1.3.3",
+  "release_date": "2026-03-22",
+  "description": "Security Hardening: CSRF Protection, Session Timeout, and Security Headers implementation across the entire application.",
+  "author": "Antigravity",
+  "files": [
+    "includes/security_functions.php",
+    "includes/auth_session.php",
+    "includes/header.php",
+    "views/auth/login.php",
+    "views/auth/register.php",
+    "views/auth/forgot-password.php",
+    "views/auth/reset-password.php",
+    "views/dashboard.php",
+    "views/profile.php",
+    "views/admin/settings.php",
+    "views/admin/users.php",
+    "views/admin/storage.php",
+    "views/admin/backup.php",
+    "views/admin/updater.php",
+    "views/admin/process_backup.php",
+    "views/admin/process_restore.php",
+    "views/admin/process_update.php",
+    "views/sign/qr_create.php",
+    "views/sign/preview_bulk.php",
+    "views/sign/process_bulk.php",
+    "views/sign/process_single.php",
+    "views/sign/bulk.php",
+    "views/sign/single.php",
+    "config/version.lock",
+    "README.md"
+  ]
+}

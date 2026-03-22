@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../../includes/security_functions.php';
+add_security_headers();
 session_start();
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../includes/mailer.php';
@@ -17,6 +19,9 @@ $error = '';
 $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        die("CSRF Token Validation Failed.");
+    }
     $email = trim($_POST['email']);
     
     if (empty($email)) {
@@ -120,6 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php endif; ?>
 
             <form method="POST" action="" class="space-y-6">
+                <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1" for="email">Email Address</label>
                     <input class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" id="email" name="email" type="email" placeholder="nama@perusahaan.com" required>

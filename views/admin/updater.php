@@ -95,6 +95,7 @@ function updaterApp() {
 
             const formData = new FormData();
             formData.append('update_file', this.file);
+            formData.append('csrf_token', '<?php echo get_csrf_token(); ?>');
 
             try {
                 const response = await fetch('<?php echo BASE_URL; ?>/admin/process_update', {

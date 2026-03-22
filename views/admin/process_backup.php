@@ -7,6 +7,11 @@ requireAdmin();
 set_time_limit(600);
 ini_set('memory_limit', '512M');
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        die("CSRF Token Validation Failed.");
+    }
+}
 $backupDb = isset($_POST['backup_db']) && $_POST['backup_db'] == '1';
 $backupMedia = isset($_POST['backup_media']) && $_POST['backup_media'] == '1';
 

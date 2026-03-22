@@ -38,6 +38,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+    echo json_encode(['status' => 'error', 'message' => 'CSRF Token Validation Failed.']);
+    exit;
+}
+
 if (!isset($_FILES['backup_file']) || $_FILES['backup_file']['error'] !== 0) {
     echo json_encode(['status' => 'error', 'message' => 'Upload file gagal']);
     exit;

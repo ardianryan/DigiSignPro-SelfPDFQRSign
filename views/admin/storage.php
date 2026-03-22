@@ -12,6 +12,9 @@ $msg = '';
 $msg_type = 'success';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        die("CSRF Token Validation Failed.");
+    }
     if ($_POST['action'] === 'delete') {
         $key = $_POST['key'];
         // Use s3:// prefix to force S3 deletion in Storage::delete
@@ -167,6 +170,7 @@ function formatBytes($bytes, $precision = 2) {
 <?php endif; ?>
 
 <form id="deleteForm" method="POST" style="display:none;">
+    <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
     <input type="hidden" name="action" value="delete">
     <input type="hidden" name="key" id="deleteKey">
 </form>

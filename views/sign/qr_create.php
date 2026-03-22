@@ -20,6 +20,9 @@ $error = '';
 
 // Step 1: Handle CreateƒQR
 if ($step == 1 && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        die("CSRF Token Validation Failed.");
+    }
     $doc_number = trim($_POST['document_number']);
     $subject = trim($_POST['subject']);
     $attachment = trim($_POST['attachment']);
@@ -95,6 +98,9 @@ if ($step >= 2 && $id > 0) {
 
 // Step 3: Handle Upload
 if ($step == 3 && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        die("CSRF Token Validation Failed.");
+    }
     if (isset($_POST['skip'])) {
         echo "<script>window.location.href = '" . BASE_URL . "/sign/qr_list';</script>";
         exit;
@@ -237,6 +243,7 @@ if ($step == 3 && $_SERVER['REQUEST_METHOD'] === 'POST') {
         <!-- STEP 1: INPUT DATA -->
         <?php if ($step == 1): ?>
         <form method="POST">
+            <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
             <h3 class="text-lg font-bold text-slate-800 mb-4">Lengkapi Detail Dokumen</h3>
             <div class="space-y-4">
                 <div>
@@ -302,6 +309,7 @@ if ($step == 3 && $_SERVER['REQUEST_METHOD'] === 'POST') {
         <!-- STEP 3: UPLOAD (OPTIONAL) -->
         <?php if ($step == 3): ?>
         <form method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
             <div class="text-center mb-6">
                 <h3 class="text-lg font-bold text-slate-800 mb-2">Upload Dokumen Final (Opsional)</h3>
                 <p class="text-slate-500 text-sm">

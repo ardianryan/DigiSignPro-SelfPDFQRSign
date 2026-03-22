@@ -11,6 +11,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+    if (ob_get_level()) { ob_end_clean(); }
+    echo json_encode(['status' => 'error', 'message' => 'CSRF Token Validation Failed.']);
+    exit;
+}
+
 if (!isset($_FILES['zip_file']) || $_FILES['zip_file']['error'] !== 0) {
     if (ob_get_level()) { ob_end_clean(); }
     echo json_encode(['status' => 'error', 'message' => 'Upload File ZIP Gagal']);
