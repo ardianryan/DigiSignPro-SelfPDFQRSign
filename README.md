@@ -2,6 +2,12 @@
 
 DigiSign adalah aplikasi berbasis web untuk manajemen tanda tangan elektronik (TTE) dan verifikasi dokumen. Aplikasi ini dirancang untuk memfasilitasi penandatanganan dokumen secara digital (Single & Bulk), pembuatan QR Code verifikasi (TTE QR), serta validasi keaslian dokumen.
 
+## 📱 App Preview
+
+| Single Sign & Consent | S3 Storage Settings | Public Verification |
+| :---: | :---: | :---: |
+| ![Single Sign](updates/gitassets/ssdspro1.jpg) | ![Settings](updates/gitassets/ssdspro2.jpg) | ![Verification](updates/gitassets/ssdspro3.jpg) |
+
 ## 🚀 Fitur Utama
 
 ### 1. Tanda Tangan Elektronik (Electronic Signature)
