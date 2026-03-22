@@ -68,7 +68,7 @@ Setiap paket update harus berupa file ZIP yang berisi:
 
 ## 📝 Changelog
 
-### v1.3.2 (Object Storage S3 & Security Hardening) - 2026-03-22
+### v1.3.3 (Object Storage S3 & Security Hardening) - 2026-03-22
 **Fitur Baru & Perbaikan:**
 - **Security Hardening**: Proteksi CSRF di seluruh form, pengerasan cookie session (`HttpOnly`, `Secure`, `SameSite`), dan header `Cache-Control`.
 - **Cookie Consent**: Pop-up persetujuan cookie dengan desain premium glassmorphism.
