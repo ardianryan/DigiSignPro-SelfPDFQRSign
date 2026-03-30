@@ -16,6 +16,21 @@ add_security_headers();
     <style>
         body { font-family: 'Inter', sans-serif; }
         [x-cloak] { display: none !important; }
+        
+        /* Custom Scrollbar for Sidebar */
+        .sidebar-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar-scroll::-webkit-scrollbar-track {
+            background: #0f172a; /* bg-slate-900 */
+        }
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+            background: #334155; /* bg-slate-700 */
+            border-radius: 10px;
+        }
+        .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+            background: #475569; /* bg-slate-600 */
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased" x-data="{ sidebarOpen: false }">
