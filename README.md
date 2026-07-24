@@ -67,6 +67,12 @@ Migrasi bersifat **idempotent** dan mendukung **DB DigiSign lama**:
 
 **Deploy kode aplikasi:** via CI/CD (git pull / build / deploy). Unggah paket update ZIP sudah dihapus / deprecated.
 
+**Pindah dari DigiSign PHP native (sekali saja):**
+```bash
+php artisan digisign:legacy-cutover
+```
+Detail: [`docs/LEGACY_CUTOVER.md`](docs/LEGACY_CUTOVER.md). Session lama tidak dipindah — user login ulang. Setelah cutover, update harian hanya CI/CD + Migrasi Database (password admin).
+
 ### 7. Seed Data Awal (Admin + Settings)
 ```bash
 php artisan db:seed

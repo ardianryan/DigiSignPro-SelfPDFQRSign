@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\StorageController as AdminStorageController;
 use App\Http\Controllers\Admin\BackupController as AdminBackupController;
 use App\Http\Controllers\Admin\DatabaseController as AdminDatabaseController;
 use App\Http\Controllers\Admin\UpdaterController as AdminUpdaterController;
+use App\Http\Controllers\Admin\LegacyCutoverController as AdminLegacyCutoverController;
 use App\Http\Controllers\ApiKeyController;
 use App\Http\Controllers\Api\ApiDocsController;
 use Illuminate\Support\Facades\Route;
@@ -75,9 +76,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/admin/backup', [AdminBackupController::class, 'index'])->name('admin.backup.index');
         Route::post('/admin/backup', [AdminBackupController::class, 'run'])->name('admin.backup.run');
         Route::post('/admin/backup/restore', [AdminBackupController::class, 'restore'])->name('admin.backup.restore');
-        // ZIP app update deprecated — deploy via CI/CD; keep DB migrate only (password re-entry required)
+        // Deploy kode: CI/CD. Migrasi harian + cutover once (password re-entry required)
         Route::post('/admin/database/migrate', [AdminDatabaseController::class, 'migrate'])->name('admin.database.migrate');
         Route::get('/admin/updater', [AdminUpdaterController::class, 'index'])->name('admin.updater.index');
+        Route::post('/admin/legacy-cutover', [AdminLegacyCutoverController::class, 'run'])->name('admin.legacy_cutover.run');
     });
 });
 

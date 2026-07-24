@@ -23,6 +23,8 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
     's3_secret_key',
     's3_directory',
     's3_public_url',
+    'legacy_cutover_at',
+    'legacy_cutover_note',
 ])]
 class AppSetting extends Model
 {
@@ -36,6 +38,7 @@ class AppSetting extends Model
             'max_upload_size' => 'integer',
             'max_upload_size_bulk' => 'integer',
             'max_prefix_length' => 'integer',
+            'legacy_cutover_at' => 'datetime',
         ];
     }
 }

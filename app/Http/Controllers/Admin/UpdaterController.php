@@ -3,12 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\LegacyCutover;
 use Illuminate\Support\Facades\Artisan;
 use Inertia\Inertia;
 use Throwable;
 
 /**
- * Database migration status page only.
+ * Database migration page + one-time legacy cutover status.
  * ZIP app updates are deprecated — deploy via CI/CD instead.
  */
 class UpdaterController extends Controller
@@ -55,11 +56,17 @@ class UpdaterController extends Controller
         }
     }
 
-    public function index()
+    public function index(LegacyCutover $cutover)
     {
         return Inertia::render('Admin/Updater', [
             'current_version' => $this->currentVersion(),
             'migration' => $this->migrationStatus(),
+            'legacy_cutover' => [
+                'completed' => $cutover->isCompleted(),
+                'should_offer' => $cutover->shouldOffer(),
+                'looks_legacy' => $cutover->looksLegacy(),
+                'cli_command' => 'php artisan digisign:legacy-cutover',
+            ],
         ]);
     }
 }

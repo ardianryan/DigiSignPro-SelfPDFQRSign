@@ -163,6 +163,8 @@ class LegacyDigisignSchema
             's3_secret_key' => fn (Blueprint $t) => $t->string('s3_secret_key')->nullable(),
             's3_directory' => fn (Blueprint $t) => $t->string('s3_directory')->default('digisign/'),
             's3_public_url' => fn (Blueprint $t) => $t->string('s3_public_url')->nullable(),
+            'legacy_cutover_at' => fn (Blueprint $t) => $t->timestamp('legacy_cutover_at')->nullable(),
+            'legacy_cutover_note' => fn (Blueprint $t) => $t->string('legacy_cutover_note', 500)->nullable(),
             'created_at' => fn (Blueprint $t) => $t->timestamp('created_at')->nullable(),
             'updated_at' => fn (Blueprint $t) => $t->timestamp('updated_at')->nullable(),
         ];
