@@ -6,20 +6,39 @@ use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
+use App\Models\AppSetting;
+use Illuminate\Support\Facades\Hash;
+
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
     /**
      * Seed the application's database.
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // 1. Seed Default App Settings
+        AppSetting::create([
+            'app_name' => 'DigiSign Pro',
+            'maintenance_mode' => false,
+            'registration_open' => true,
+        ]);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        // 2. Seed Admin User
+        User::create([
+            'name' => 'Administrator',
+            'email' => 'admin@example.com',
+            'password' => Hash::make('password'),
+            'role' => 'admin',
+            'position' => 'IT Administrator',
+        ]);
+
+        // 3. Seed Regular User
+        User::create([
+            'name' => 'Demo User',
+            'email' => 'user@example.com',
+            'password' => Hash::make('password'),
+            'role' => 'user',
+            'position' => 'Staff',
         ]);
     }
 }
