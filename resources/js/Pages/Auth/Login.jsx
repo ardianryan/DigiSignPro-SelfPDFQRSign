@@ -11,8 +11,8 @@ export default function Login({ status, canResetPassword, settings }) {
 
     const appName = settings?.app_name || 'DigiSign Pro';
     const appLogo = settings?.app_logo || null;
-    const maintenanceMode = settings?.maintenance_mode == 1;
-    const registrationOpen = settings?.registration_open !== undefined ? settings.registration_open == 1 : true;
+    const maintenanceMode = !!settings?.maintenance_mode;
+    const registrationOpen = settings?.registration_open !== undefined ? !!settings.registration_open : true;
 
     const submit = (e) => {
         e.preventDefault();

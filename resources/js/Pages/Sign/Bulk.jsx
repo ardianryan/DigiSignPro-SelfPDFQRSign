@@ -18,7 +18,6 @@ export default function Bulk({ auth, max_upload_size_bulk }) {
     const [markerX, setMarkerX] = useState(0);
     const [markerY, setMarkerY] = useState(0);
     const [markerSize, setMarkerSize] = useState(100);
-    const [scale] = useState(1.5);
 
     const [formData, setFormData] = useState({
         base_number: '',
@@ -32,6 +31,8 @@ export default function Bulk({ auth, max_upload_size_bulk }) {
     const containerRef = useRef(null);
     const markerRef = useRef(null);
     const pdfDocRef = useRef(null);
+    const scaleRef = useRef(1.5);
+    const markerRatioRef = useRef({ x: 0.5, y: 0.5 });
 
     const [isDraggingMarker, setIsDraggingMarker] = useState(false);
     const dragOffset = useRef({ x: 0, y: 0 });
@@ -112,37 +113,42 @@ export default function Bulk({ auth, max_upload_size_bulk }) {
         }
     };
 
-    const renderPage = async (num) => {
-        if (!pdfDocRef.current || !canvasRef.current) return;
+    const renderPage = async (num, { preserveMarker = false } = {}) => {
+        if (!pdfDocRef.current || !canvasRef.current || !containerRef.current) return;
 
         try {
             const page = await pdfDocRef.current.getPage(num);
             const canvas = canvasRef.current;
+            const container = containerRef.current;
             const ctx = canvas.getContext('2d');
-            const viewport = page.getViewport({ scale });
 
+            const baseViewport = page.getViewport({ scale: 1 });
+            const padding = 16;
+            const availableWidth = Math.max(240, container.clientWidth - padding * 2);
+            const fitScale = Math.min(2.25, availableWidth / baseViewport.width);
+            scaleRef.current = fitScale;
+
+            const viewport = page.getViewport({ scale: fitScale });
             canvas.height = viewport.height;
             canvas.width = viewport.width;
+            canvas.style.width = `${viewport.width}px`;
+            canvas.style.height = `${viewport.height}px`;
+            canvas.style.display = 'block';
+            canvas.style.maxWidth = 'none';
 
-            const renderContext = {
-                canvasContext: ctx,
-                viewport: viewport
-            };
-
-            await page.render(renderContext).promise;
+            await page.render({ canvasContext: ctx, viewport }).promise;
 
             const targetMm = 25;
             const targetPoints = targetMm * 2.83465;
+            const cssToPointsRatio = canvas.clientWidth / baseViewport.width;
+            const markerPx = Math.max(48, targetPoints * cssToPointsRatio);
+            setMarkerSize(markerPx);
 
-            const pdfPointsWidth = canvas.width / scale;
-            if (pdfPointsWidth > 0) {
-                const cssToPointsRatio = canvas.clientWidth / pdfPointsWidth;
-                const markerPx = targetPoints * cssToPointsRatio;
-                setMarkerSize(markerPx);
-
-                setMarkerX(canvas.offsetLeft + (canvas.clientWidth - markerPx) / 2);
-                setMarkerY(canvas.offsetTop + (canvas.clientHeight - markerPx) / 2);
-            }
+            const ratio = preserveMarker ? markerRatioRef.current : { x: 0.55, y: 0.7 };
+            const left = canvas.offsetLeft + ratio.x * canvas.clientWidth - markerPx / 2;
+            const top = canvas.offsetTop + ratio.y * canvas.clientHeight - markerPx / 2;
+            setMarkerX(Math.min(Math.max(canvas.offsetLeft, left), canvas.offsetLeft + canvas.clientWidth - markerPx));
+            setMarkerY(Math.min(Math.max(canvas.offsetTop, top), canvas.offsetTop + canvas.clientHeight - markerPx));
         } catch (err) {
             console.error('Error rendering bulk preview page:', err);
         }
@@ -150,9 +156,25 @@ export default function Bulk({ auth, max_upload_size_bulk }) {
 
     useEffect(() => {
         if (zipLoaded) {
-            renderPage(pageNum);
+            const t = setTimeout(() => renderPage(pageNum), 50);
+            return () => clearTimeout(t);
         }
     }, [pageNum, zipLoaded]);
+
+    useEffect(() => {
+        if (!zipLoaded) return;
+        const onResize = () => renderPage(pageNum, { preserveMarker: true });
+        window.addEventListener('resize', onResize);
+        let ro;
+        if (containerRef.current && typeof ResizeObserver !== 'undefined') {
+            ro = new ResizeObserver(onResize);
+            ro.observe(containerRef.current);
+        }
+        return () => {
+            window.removeEventListener('resize', onResize);
+            if (ro) ro.disconnect();
+        };
+    }, [zipLoaded, pageNum]);
 
     const changePage = (delta) => {
         const next = pageNum + delta;
@@ -200,6 +222,12 @@ export default function Bulk({ auth, max_upload_size_bulk }) {
 
                 setMarkerX(newLeft);
                 setMarkerY(newTop);
+                if (canvas.clientWidth > 0 && canvas.clientHeight > 0) {
+                    markerRatioRef.current = {
+                        x: (newLeft - canvas.offsetLeft + markerSize / 2) / canvas.clientWidth,
+                        y: (newTop - canvas.offsetTop + markerSize / 2) / canvas.clientHeight,
+                    };
+                }
             }
         };
 
@@ -240,16 +268,18 @@ export default function Bulk({ auth, max_upload_size_bulk }) {
 
         try {
             const canvas = canvasRef.current;
-            const visualScale = canvas.width / canvas.clientWidth;
+            const renderScale = scaleRef.current || 1;
+            const visualScaleX = canvas.width / Math.max(1, canvas.clientWidth);
+            const visualScaleY = canvas.height / Math.max(1, canvas.clientHeight);
 
             const visualX = markerX - canvas.offsetLeft;
             const visualY = markerY - canvas.offsetTop;
 
-            const realX = visualX * visualScale;
-            const realY = visualY * visualScale;
+            const realX = visualX * visualScaleX;
+            const realY = visualY * visualScaleY;
 
-            const xPt = realX / scale;
-            const yPt = realY / scale;
+            const xPt = realX / renderScale;
+            const yPt = realY / renderScale;
 
             const xMm = xPt * 0.352778;
             const yMm = yPt * 0.352778;
@@ -317,7 +347,7 @@ export default function Bulk({ auth, max_upload_size_bulk }) {
             <Head title="Bulk Sign" />
 
             <div className="py-6">
-                <div className="mx-auto max-w-5xl">
+                <div className="mx-auto w-full max-w-none">
                     <div className="mb-6">
                         <p className="text-slate-500 dark:text-slate-400 font-medium">Upload ZIP berisi banyak file PDF, posisikan QR, lalu tandatangani sekaligus.</p>
                     </div>
@@ -341,9 +371,9 @@ export default function Bulk({ auth, max_upload_size_bulk }) {
 
                         {/* Step 2: Editor Preview */}
                         {zipLoaded && (
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
                                 {/* Left Form Control */}
-                                <div className="lg:col-span-1 space-y-4">
+                                <div className="xl:col-span-4 space-y-4 min-w-0">
                                     <div className="bg-slate-50 dark:bg-gray-700/50 p-6 rounded-xl border border-slate-200 dark:border-gray-600">
                                         <h3 className="font-bold text-slate-800 dark:text-white mb-4">Metadata Batch</h3>
                                         <div className="space-y-4">
@@ -444,8 +474,8 @@ export default function Bulk({ auth, max_upload_size_bulk }) {
                                 </div>
 
                                 {/* Right Canvas Preview Workspace */}
-                                <div className="lg:col-span-2 flex flex-col items-center">
-                                    <div className="flex items-center justify-between w-full max-w-lg mb-4 bg-slate-50 dark:bg-gray-700 px-4 py-2 rounded-lg border border-slate-200 dark:border-gray-600">
+                                <div className="xl:col-span-8 flex flex-col min-w-0 w-full">
+                                    <div className="flex items-center justify-between w-full mb-3 bg-slate-50 dark:bg-gray-700 px-4 py-2 rounded-lg border border-slate-200 dark:border-gray-600">
                                         <button
                                             onClick={() => changePage(-1)}
                                             disabled={pageNum <= 1}
@@ -453,7 +483,7 @@ export default function Bulk({ auth, max_upload_size_bulk }) {
                                         >
                                             Prev
                                         </button>
-                                        <span className="text-sm font-medium text-slate-800 dark:text-white">
+                                        <span className="text-sm font-medium text-slate-800 dark:text-white truncate px-2">
                                             Preview: {previewFilename} (Halaman {pageNum}/{totalPage})
                                         </span>
                                         <button
@@ -467,12 +497,13 @@ export default function Bulk({ auth, max_upload_size_bulk }) {
 
                                     <div
                                         ref={containerRef}
-                                        className="relative bg-slate-200 dark:bg-gray-900 p-4 rounded-xl border border-slate-300 dark:border-gray-600 overflow-auto max-w-full"
-                                        style={{ minHeight: '600px' }}
+                                        className="relative w-full bg-slate-300 dark:bg-gray-900 p-2 sm:p-3 rounded-xl border border-slate-300 dark:border-gray-600 overflow-auto"
+                                        style={{ maxHeight: 'calc(100vh - 12rem)', minHeight: '420px' }}
                                     >
-                                        <canvas ref={canvasRef} id="pdf-render" className="shadow-lg mx-auto" />
+                                        <div className="relative inline-block min-w-full">
+                                        <canvas ref={canvasRef} id="pdf-render" className="shadow-lg mx-auto block bg-white" />
 
-                                        {/* Drag Marker */}
+                                        {/* Drag Marker — matches final PDF QR stamp size (25mm) */}
                                         <div
                                             ref={markerRef}
                                             id="qr-marker"
@@ -484,31 +515,42 @@ export default function Bulk({ auth, max_upload_size_bulk }) {
                                                 top: `${markerY}px`,
                                                 width: `${markerSize}px`,
                                                 height: `${markerSize}px`,
-                                                border: '2px dashed #3b82f6',
-                                                background: 'rgba(59, 130, 246, 0.2)',
+                                                border: '1px solid #1e293b',
+                                                background: '#ffffff',
                                                 cursor: 'move',
                                                 display: 'flex',
-                                                flexDirection: 'column',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
                                                 zIndex: 10,
-                                                touchAction: 'none'
+                                                touchAction: 'none',
+                                                boxSizing: 'border-box',
+                                                boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
+                                                padding: '4%',
                                             }}
-                                            className="rounded-lg shadow-md select-none"
+                                            className="select-none"
+                                            title="Geser ke posisi tanda tangan (ukuran = hasil PDF)"
                                         >
-                                            <div className="w-8 h-8 text-blue-600 flex items-center justify-center">
-                                                <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 4v1m6 11h2m-6 0h-2v4h-4v-2h-2v4h6v-2h2v-2h2v-2h-2v2zM12 2h2v2h-2V2zm4 4v2h2V6h-2zm-4 4v2h2v-2h-2v2zM6 6h4v4H6V6zm14 0h-4v4h4V6zM6 16h4v4H6v-4z"></path>
-                                                </svg>
-                                            </div>
-                                            <span className="text-[9px] text-blue-700 font-bold bg-white/80 dark:bg-slate-900/80 px-1 rounded mt-1 select-none pointer-events-none">
-                                                TTE QR STAMP
-                                            </span>
+                                            <svg viewBox="0 0 29 29" className="w-full h-full pointer-events-none" shapeRendering="crispEdges" aria-hidden>
+                                                <rect width="29" height="29" fill="#fff" />
+                                                <rect x="1" y="1" width="7" height="7" fill="#111" />
+                                                <rect x="2" y="2" width="5" height="5" fill="#fff" />
+                                                <rect x="3" y="3" width="3" height="3" fill="#111" />
+                                                <rect x="21" y="1" width="7" height="7" fill="#111" />
+                                                <rect x="22" y="2" width="5" height="5" fill="#fff" />
+                                                <rect x="23" y="3" width="3" height="3" fill="#111" />
+                                                <rect x="1" y="21" width="7" height="7" fill="#111" />
+                                                <rect x="2" y="22" width="5" height="5" fill="#fff" />
+                                                <rect x="3" y="23" width="3" height="3" fill="#111" />
+                                                <rect x="10" y="10" width="9" height="9" fill="#111" />
+                                                <rect x="12" y="12" width="5" height="5" fill="#fff" />
+                                                <rect x="13" y="13" width="3" height="3" fill="#111" />
+                                            </svg>
+                                        </div>
                                         </div>
                                     </div>
 
                                     <p className="text-xs text-slate-400 dark:text-gray-400 mt-2">
-                                        * Koordinat stamp biru ini akan diterapkan ke semua dokumen di dalam ZIP secara otomatis.
+                                        * Seluruh halaman PDF ditampilkan full width. Koordinat stamp diterapkan ke semua dokumen ZIP.
                                     </p>
                                 </div>
                             </div>

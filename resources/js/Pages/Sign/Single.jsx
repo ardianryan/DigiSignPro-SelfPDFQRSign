@@ -17,7 +17,6 @@ export default function Single({ auth, max_upload_size }) {
     const [markerX, setMarkerX] = useState(0);
     const [markerY, setMarkerY] = useState(0);
     const [markerSize, setMarkerSize] = useState(100); // placeholder px size
-    const [scale] = useState(1.5); // Preview scaling
 
     const [formData, setFormData] = useState({
         document_number: '',
@@ -33,6 +32,9 @@ export default function Single({ auth, max_upload_size }) {
     const containerRef = useRef(null);
     const markerRef = useRef(null);
     const pdfDocRef = useRef(null);
+    /** Current PDF.js render scale (fit-to-width). Used for coordinate conversion. */
+    const scaleRef = useRef(1.5);
+    const markerRatioRef = useRef({ x: 0.5, y: 0.5 }); // position as ratio of canvas for resize
 
     const [isDraggingMarker, setIsDraggingMarker] = useState(false);
     const dragOffset = useRef({ x: 0, y: 0 });
@@ -83,40 +85,61 @@ export default function Single({ auth, max_upload_size }) {
         reader.readAsArrayBuffer(selectedFile);
     };
 
-    const renderPage = async (num) => {
-        if (!pdfDocRef.current || !canvasRef.current) return;
+    const renderPage = async (num, { preserveMarker = false } = {}) => {
+        if (!pdfDocRef.current || !canvasRef.current || !containerRef.current) return;
 
         try {
             const page = await pdfDocRef.current.getPage(num);
             const canvas = canvasRef.current;
+            const container = containerRef.current;
             const ctx = canvas.getContext('2d');
-            const viewport = page.getViewport({ scale });
+
+            // Fit entire page width into the preview pane (prevents horizontal clipping)
+            const baseViewport = page.getViewport({ scale: 1 });
+            const padding = 16; // matches container p-2/p-4
+            const availableWidth = Math.max(240, container.clientWidth - padding * 2);
+            // Fit width; keep a reasonable upper bound for retina sharpness
+            const fitScale = Math.min(2.25, availableWidth / baseViewport.width);
+            scaleRef.current = fitScale;
+
+            const viewport = page.getViewport({ scale: fitScale });
 
             canvas.height = viewport.height;
             canvas.width = viewport.width;
+            // 1:1 CSS size so the full canvas is visible inside overflow container
+            canvas.style.width = `${viewport.width}px`;
+            canvas.style.height = `${viewport.height}px`;
+            canvas.style.display = 'block';
+            canvas.style.maxWidth = 'none';
 
             const renderContext = {
                 canvasContext: ctx,
-                viewport: viewport
+                viewport: viewport,
             };
 
             await page.render(renderContext).promise;
 
-            // Target QR size in mm (matches backend)
+            // Target QR size in mm (matches backend ~25mm stamp)
             const targetMm = 25;
             const targetPoints = targetMm * 2.83465;
+            const pdfPointsWidth = baseViewport.width;
+            const cssToPointsRatio = canvas.clientWidth / pdfPointsWidth;
+            const markerPx = Math.max(48, targetPoints * cssToPointsRatio);
+            setMarkerSize(markerPx);
 
-            // Logical points width
-            const pdfPointsWidth = canvas.width / scale;
-            if (pdfPointsWidth > 0) {
-                const cssToPointsRatio = canvas.clientWidth / pdfPointsWidth;
-                const markerPx = targetPoints * cssToPointsRatio;
-                setMarkerSize(markerPx);
-
-                // Put marker initially centered inside canvas
-                setMarkerX(canvas.offsetLeft + (canvas.clientWidth - markerPx) / 2);
-                setMarkerY(canvas.offsetTop + (canvas.clientHeight - markerPx) / 2);
-            }
+            const ratio = preserveMarker ? markerRatioRef.current : { x: 0.55, y: 0.7 };
+            const left = canvas.offsetLeft + ratio.x * canvas.clientWidth - markerPx / 2;
+            const top = canvas.offsetTop + ratio.y * canvas.clientHeight - markerPx / 2;
+            const clampedLeft = Math.min(
+                Math.max(canvas.offsetLeft, left),
+                canvas.offsetLeft + canvas.clientWidth - markerPx
+            );
+            const clampedTop = Math.min(
+                Math.max(canvas.offsetTop, top),
+                canvas.offsetTop + canvas.clientHeight - markerPx
+            );
+            setMarkerX(clampedLeft);
+            setMarkerY(clampedTop);
         } catch (err) {
             console.error('Error rendering PDF page:', err);
         }
@@ -124,9 +147,32 @@ export default function Single({ auth, max_upload_size }) {
 
     useEffect(() => {
         if (pdfLoaded) {
-            renderPage(pageNum);
+            // slight delay so container has measured width after layout
+            const t = setTimeout(() => renderPage(pageNum), 50);
+            return () => clearTimeout(t);
         }
     }, [pageNum, pdfLoaded]);
+
+    // Re-fit PDF when window/container resizes so preview is never cut off
+    useEffect(() => {
+        if (!pdfLoaded) return;
+
+        const onResize = () => {
+            renderPage(pageNum, { preserveMarker: true });
+        };
+
+        window.addEventListener('resize', onResize);
+        let ro;
+        if (containerRef.current && typeof ResizeObserver !== 'undefined') {
+            ro = new ResizeObserver(() => onResize());
+            ro.observe(containerRef.current);
+        }
+
+        return () => {
+            window.removeEventListener('resize', onResize);
+            if (ro) ro.disconnect();
+        };
+    }, [pdfLoaded, pageNum]);
 
     const changePage = (delta) => {
         const next = pageNum + delta;
@@ -192,6 +238,14 @@ export default function Single({ auth, max_upload_size }) {
 
                 setMarkerX(newLeft);
                 setMarkerY(newTop);
+
+                // Keep ratio for responsive re-render
+                if (canvas.clientWidth > 0 && canvas.clientHeight > 0) {
+                    markerRatioRef.current = {
+                        x: (newLeft - canvas.offsetLeft + markerSize / 2) / canvas.clientWidth,
+                        y: (newTop - canvas.offsetTop + markerSize / 2) / canvas.clientHeight,
+                    };
+                }
             }
         };
 
@@ -239,16 +293,19 @@ export default function Single({ auth, max_upload_size }) {
 
         try {
             const canvas = canvasRef.current;
-            const visualScale = canvas.width / canvas.clientWidth;
+            const renderScale = scaleRef.current || 1;
+            // canvas may equal CSS size (1:1); still normalize safely
+            const visualScaleX = canvas.width / Math.max(1, canvas.clientWidth);
+            const visualScaleY = canvas.height / Math.max(1, canvas.clientHeight);
 
             const visualX = markerX - canvas.offsetLeft;
             const visualY = markerY - canvas.offsetTop;
 
-            const realX = visualX * visualScale;
-            const realY = visualY * visualScale;
+            const realX = visualX * visualScaleX;
+            const realY = visualY * visualScaleY;
 
-            const xPt = realX / scale;
-            const yPt = realY / scale;
+            const xPt = realX / renderScale;
+            const yPt = realY / renderScale;
 
             // Convert points to millimeters
             const xMm = xPt * 0.352778;
@@ -312,13 +369,13 @@ export default function Single({ auth, max_upload_size }) {
         >
             <Head title="Single Sign" />
 
-            <div className="py-6">
-                <div className="mx-auto max-w-5xl">
-                    <div className="mb-6">
+            <div className="py-2 md:py-4">
+                <div className="mx-auto w-full max-w-none">
+                    <div className="mb-4">
                         <p className="text-slate-500 dark:text-slate-400 font-medium">Upload PDF dan tempatkan QR Code tanda tangan.</p>
                     </div>
 
-                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-200 dark:border-gray-700 p-6">
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-200 dark:border-gray-700 p-4 md:p-6">
                         
                         {/* Step 1: Upload Area */}
                         {!pdfLoaded && (
@@ -346,10 +403,10 @@ export default function Single({ auth, max_upload_size }) {
 
                         {/* Step 2: Editor Preview */}
                         {pdfLoaded && (
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
                                 {/* Left Form Control */}
-                                <div className="lg:col-span-1 space-y-4">
-                                    <div className="bg-slate-50 dark:bg-gray-700/50 p-6 rounded-xl border border-slate-200 dark:border-gray-600">
+                                <div className="xl:col-span-4 space-y-4 min-w-0">
+                                    <div className="bg-slate-50 dark:bg-gray-700/50 p-5 rounded-xl border border-slate-200 dark:border-gray-600">
                                         <h3 className="font-bold text-slate-800 dark:text-white mb-4">Detail Dokumen</h3>
                                         <div className="space-y-4">
                                             <div>
@@ -416,7 +473,7 @@ export default function Single({ auth, max_upload_size }) {
                                                     className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 mt-1"
                                                 />
                                                 <div className="ml-2 text-sm">
-                                                    <label htmlFor="show_qr_caption" class="font-medium text-slate-700 dark:text-slate-200">Tampilkan Keterangan QR</label>
+                                                    <label htmlFor="show_qr_caption" className="font-medium text-slate-700 dark:text-slate-200">Tampilkan Keterangan QR</label>
                                                     <p className="text-slate-400 text-xs">Informasi ID verifikasi, nama penandatangan, dan jabatan.</p>
                                                 </div>
                                             </div>
@@ -469,9 +526,9 @@ export default function Single({ auth, max_upload_size }) {
                                 </div>
 
                                 {/* Right PDF Canvas Workspace */}
-                                <div className="lg:col-span-2 flex flex-col items-center">
+                                <div className="xl:col-span-8 flex flex-col min-w-0 w-full">
                                     {/* Page Controller */}
-                                    <div className="flex items-center justify-between w-full max-w-lg mb-4 bg-slate-50 dark:bg-gray-700 px-4 py-2 rounded-lg border border-slate-200 dark:border-gray-600">
+                                    <div className="flex items-center justify-between w-full mb-3 bg-slate-50 dark:bg-gray-700 px-4 py-2 rounded-lg border border-slate-200 dark:border-gray-600">
                                         <button
                                             onClick={() => changePage(-1)}
                                             disabled={pageNum <= 1}
@@ -491,15 +548,16 @@ export default function Single({ auth, max_upload_size }) {
                                         </button>
                                     </div>
 
-                                    {/* Canvas drag-container */}
+                                    {/* Canvas drag-container — full width, scroll if still taller than viewport */}
                                     <div
                                         ref={containerRef}
-                                        className="relative bg-slate-200 dark:bg-gray-900 p-4 rounded-xl border border-slate-300 dark:border-gray-600 overflow-auto max-w-full"
-                                        style={{ minHeight: '600px' }}
+                                        className="relative w-full bg-slate-300 dark:bg-gray-900 p-2 sm:p-3 rounded-xl border border-slate-300 dark:border-gray-600 overflow-auto"
+                                        style={{ maxHeight: 'calc(100vh - 12rem)', minHeight: '420px' }}
                                     >
-                                        <canvas ref={canvasRef} id="pdf-render" className="shadow-lg mx-auto" />
+                                        <div className="relative inline-block min-w-full">
+                                        <canvas ref={canvasRef} id="pdf-render" className="shadow-lg mx-auto block bg-white" />
 
-                                        {/* QR Marker Stamp */}
+                                        {/* QR Marker Stamp — solid square matching final 25mm PDF stamp (no extra padding) */}
                                         <div
                                             ref={markerRef}
                                             id="qr-marker"
@@ -511,32 +569,122 @@ export default function Single({ auth, max_upload_size }) {
                                                 top: `${markerY}px`,
                                                 width: `${markerSize}px`,
                                                 height: `${markerSize}px`,
-                                                border: '2px dashed #3b82f6',
-                                                background: 'rgba(59, 130, 246, 0.2)',
+                                                border: '1px solid #1e293b',
+                                                background: '#ffffff',
                                                 cursor: 'move',
                                                 display: 'flex',
                                                 flexDirection: 'column',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
                                                 zIndex: 10,
-                                                touchAction: 'none'
+                                                touchAction: 'none',
+                                                boxSizing: 'border-box',
+                                                boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
+                                                padding: '4%',
                                             }}
-                                            className="rounded-lg shadow-md group select-none"
+                                            className="select-none"
+                                            title="Geser ke posisi tanda tangan (ukuran = hasil PDF)"
                                         >
-                                            {/* QR Icon Placeholder */}
-                                            <div className="w-8 h-8 text-blue-600 flex items-center justify-center">
-                                                <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 4v1m6 11h2m-6 0h-2v4h-4v-2h-2v4h6v-2h2v-2h2v-2h-2v2zM12 2h2v2h-2V2zm4 4v2h2V6h-2zm-4 4v2h2v-2h-2v2zM6 6h4v4H6V6zm14 0h-4v4h4V6zM6 16h4v4H6v-4z"></path>
-                                                </svg>
-                                            </div>
-                                            <span className="text-[9px] text-blue-700 font-bold bg-white/80 dark:bg-slate-900/80 px-1 rounded mt-1 select-none pointer-events-none">
-                                                TTE QR STAMP
-                                            </span>
+                                            {/* Fake QR grid so preview looks like real stamp, not a hollow blue box */}
+                                            <svg
+                                                viewBox="0 0 29 29"
+                                                className="w-full h-full pointer-events-none"
+                                                shapeRendering="crispEdges"
+                                                aria-hidden
+                                            >
+                                                <rect width="29" height="29" fill="#fff" />
+                                                {/* finder patterns */}
+                                                <rect x="1" y="1" width="7" height="7" fill="#111" />
+                                                <rect x="2" y="2" width="5" height="5" fill="#fff" />
+                                                <rect x="3" y="3" width="3" height="3" fill="#111" />
+                                                <rect x="21" y="1" width="7" height="7" fill="#111" />
+                                                <rect x="22" y="2" width="5" height="5" fill="#fff" />
+                                                <rect x="23" y="3" width="3" height="3" fill="#111" />
+                                                <rect x="1" y="21" width="7" height="7" fill="#111" />
+                                                <rect x="2" y="22" width="5" height="5" fill="#fff" />
+                                                <rect x="3" y="23" width="3" height="3" fill="#111" />
+                                                {/* sample modules */}
+                                                <rect x="10" y="2" width="2" height="2" fill="#111" />
+                                                <rect x="13" y="2" width="1" height="2" fill="#111" />
+                                                <rect x="16" y="3" width="2" height="1" fill="#111" />
+                                                <rect x="10" y="6" width="1" height="2" fill="#111" />
+                                                <rect x="12" y="5" width="3" height="2" fill="#111" />
+                                                <rect x="16" y="6" width="2" height="2" fill="#111" />
+                                                <rect x="9" y="10" width="2" height="2" fill="#111" />
+                                                <rect x="12" y="10" width="1" height="3" fill="#111" />
+                                                <rect x="14" y="11" width="3" height="1" fill="#111" />
+                                                <rect x="18" y="10" width="2" height="2" fill="#111" />
+                                                <rect x="21" y="11" width="3" height="2" fill="#111" />
+                                                <rect x="25" y="10" width="1" height="2" fill="#111" />
+                                                <rect x="10" y="14" width="3" height="2" fill="#111" />
+                                                <rect x="14" y="15" width="2" height="2" fill="#111" />
+                                                <rect x="17" y="14" width="1" height="3" fill="#111" />
+                                                <rect x="20" y="15" width="3" height="1" fill="#111" />
+                                                <rect x="24" y="14" width="2" height="2" fill="#111" />
+                                                <rect x="10" y="18" width="2" height="1" fill="#111" />
+                                                <rect x="13" y="19" width="3" height="2" fill="#111" />
+                                                <rect x="17" y="18" width="2" height="2" fill="#111" />
+                                                <rect x="20" y="19" width="1" height="2" fill="#111" />
+                                                <rect x="22" y="18" width="3" height="2" fill="#111" />
+                                                <rect x="10" y="23" width="1" height="3" fill="#111" />
+                                                <rect x="12" y="24" width="2" height="2" fill="#111" />
+                                                <rect x="15" y="22" width="2" height="3" fill="#111" />
+                                                <rect x="18" y="24" width="3" height="2" fill="#111" />
+                                                <rect x="22" y="23" width="2" height="2" fill="#111" />
+                                                <rect x="25" y="25" width="2" height="2" fill="#111" />
+                                            </svg>
+
+                                            {/* Caption preview — mirrors final PDF layout */}
+                                            {formData.show_qr_caption && formData.qr_caption_position === 'bottom' && (
+                                                <div
+                                                    className="absolute left-1/2 -translate-x-1/2 pointer-events-none text-center leading-tight"
+                                                    style={{
+                                                        top: '100%',
+                                                        marginTop: 2,
+                                                        width: Math.max(markerSize * 2.2, 120),
+                                                        fontSize: 8,
+                                                        color: '#334155',
+                                                        background: 'rgba(255,255,255,0.92)',
+                                                        border: '1px solid #cbd5e1',
+                                                        padding: '2px 4px',
+                                                    }}
+                                                >
+                                                    <div>ID : {(auth?.user?.signature_prefix || 'DS')}-…</div>
+                                                    <div>Ditandatangani secara elektronik oleh</div>
+                                                    <div className="font-bold text-[10px] text-slate-900">{auth?.user?.name}</div>
+                                                    {auth?.user?.position && (
+                                                        <div className="font-bold text-slate-800">{auth.user.position}</div>
+                                                    )}
+                                                </div>
+                                            )}
+                                            {formData.show_qr_caption && formData.qr_caption_position === 'right' && (
+                                                <div
+                                                    className="absolute top-1/2 -translate-y-1/2 pointer-events-none text-left leading-tight"
+                                                    style={{
+                                                        left: '100%',
+                                                        marginLeft: 4,
+                                                        width: 140,
+                                                        fontSize: 8,
+                                                        color: '#334155',
+                                                        background: 'rgba(255,255,255,0.92)',
+                                                        border: '1px solid #cbd5e1',
+                                                        padding: '2px 4px',
+                                                    }}
+                                                >
+                                                    <div>ID : {(auth?.user?.signature_prefix || 'DS')}-…</div>
+                                                    <div>Ditandatangani secara elektronik oleh</div>
+                                                    <div className="font-bold text-[10px] text-slate-900">{auth?.user?.name}</div>
+                                                    {auth?.user?.position && (
+                                                        <div className="font-bold text-slate-800">{auth.user.position}</div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
                                         </div>
                                     </div>
 
                                     <p className="text-xs text-slate-400 dark:text-gray-400 mt-2">
-                                        * Geser stamp biru ke tempat tanda tangan yang diinginkan.
+                                        * Kotak QR = ukuran asli di PDF (25mm). Geser ke posisi tanda tangan yang diinginkan.
                                     </p>
                                 </div>
                             </div>

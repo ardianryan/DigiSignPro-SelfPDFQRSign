@@ -3,8 +3,9 @@ import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import Swal from 'sweetalert2';
 
-export default function Settings({ auth, settings }) {
+export default function Settings({ auth, settings, temp_stats }) {
     const initialSettings = settings || {};
+    const tempStats = temp_stats || { file_count: 0, size_human: '0 KB' };
 
     const [activeTab, setActiveTab] = useState('general');
     const [isTestingS3, setIsTestingS3] = useState(false);
@@ -17,6 +18,8 @@ export default function Settings({ auth, settings }) {
         registration_open: initialSettings.registration_open ? 1 : 0,
         max_upload_size_mb: initialSettings.max_upload_size ? Math.round(initialSettings.max_upload_size / (1024 * 1024)) : 10,
         max_upload_size_bulk_mb: initialSettings.max_upload_size_bulk ? Math.round(initialSettings.max_upload_size_bulk / (1024 * 1024)) : 50,
+        max_prefix_length: initialSettings.max_prefix_length || 3,
+        timezone: initialSettings.timezone || 'Asia/Jakarta',
         storage_mode: initialSettings.storage_mode || 'local',
         s3_bucket: initialSettings.s3_bucket || '',
         s3_region: initialSettings.s3_region || 'us-east-1',
@@ -132,6 +135,8 @@ export default function Settings({ auth, settings }) {
         data.append('registration_open', formData.registration_open);
         data.append('max_upload_size_mb', formData.max_upload_size_mb);
         data.append('max_upload_size_bulk_mb', formData.max_upload_size_bulk_mb);
+        data.append('max_prefix_length', formData.max_prefix_length);
+        data.append('timezone', formData.timezone);
         data.append('storage_mode', formData.storage_mode);
         data.append('s3_bucket', formData.s3_bucket);
         data.append('s3_region', formData.s3_region);
@@ -285,11 +290,48 @@ export default function Settings({ auth, settings }) {
                                             <option value={1}>Aktif (Hanya Admin yang dapat mengakses sistem)</option>
                                         </select>
                                     </div>
+
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">Maks. Panjang Prefix Tanda Tangan</label>
+                                        <input
+                                            type="number"
+                                            min={2}
+                                            max={9}
+                                            value={formData.max_prefix_length}
+                                            onChange={(e) => setFormData({ ...formData, max_prefix_length: parseInt(e.target.value) || 3 })}
+                                            className="w-full border border-slate-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
+                                        />
+                                        <p className="text-xs text-slate-400 mt-1">2–9 huruf. Digunakan pada profil user & kode verifikasi.</p>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">Zona Waktu</label>
+                                        <select
+                                            value={formData.timezone}
+                                            onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
+                                            className="w-full border border-slate-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
+                                        >
+                                            <option value="Asia/Jakarta">Asia/Jakarta (WIB)</option>
+                                            <option value="Asia/Makassar">Asia/Makassar (WITA)</option>
+                                            <option value="Asia/Jayapura">Asia/Jayapura (WIT)</option>
+                                            <option value="UTC">UTC</option>
+                                        </select>
+                                    </div>
                                 </div>
 
                                 <div className="pt-6 border-t border-slate-100 dark:border-gray-700">
                                     <h4 className="font-bold text-slate-800 dark:text-white mb-2">Pembersihan Disk</h4>
-                                    <p className="text-xs text-slate-400 dark:text-gray-400 mb-4">Hapus folder temporary yang tersimpan di server local untuk melegakan storage Anda.</p>
+                                    <p className="text-xs text-slate-400 dark:text-gray-400 mb-3">
+                                        Hapus folder temporary (upload, update package, preview) untuk melegakan storage server.
+                                    </p>
+                                    <div className="mb-4 flex flex-wrap gap-3 text-xs">
+                                        <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-gray-700 text-slate-700 dark:text-slate-200 font-semibold">
+                                            {tempStats.file_count ?? 0} file temp
+                                        </span>
+                                        <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-gray-700 text-slate-700 dark:text-slate-200 font-semibold">
+                                            {tempStats.size_human || '0 KB'}
+                                        </span>
+                                    </div>
                                     <button
                                         type="button"
                                         onClick={handleClearTemp}

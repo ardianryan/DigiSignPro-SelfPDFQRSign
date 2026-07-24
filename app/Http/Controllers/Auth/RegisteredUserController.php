@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\AppSetting;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -21,7 +22,15 @@ class RegisteredUserController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('Auth/Register');
+        $settings = AppSetting::first();
+
+        if ($settings && !$settings->registration_open) {
+            abort(403, 'Registrasi akun baru sedang ditutup. Hubungi administrator.');
+        }
+
+        return Inertia::render('Auth/Register', [
+            'settings' => $settings,
+        ]);
     }
 
     /**
@@ -31,16 +40,28 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $settings = AppSetting::first();
+
+        if ($settings && !$settings->registration_open) {
+            throw ValidationException::withMessages([
+                'email' => 'Registrasi akun baru sedang ditutup. Hubungi administrator.',
+            ]);
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
+            'position' => 'nullable|string|max:100',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'position' => $request->position,
             'password' => Hash::make($request->password),
+            'role' => 'user',
+            'signature_prefix' => 'DS',
         ]);
 
         event(new Registered($user));

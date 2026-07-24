@@ -13,10 +13,57 @@ use Throwable;
 
 class SettingController extends Controller
 {
+    private function tempDirectories(): array
+    {
+        return array_filter([
+            storage_path('app/temp'),
+            storage_path('app/public/uploads/temp'),
+            public_path('uploads/temp'),
+        ], fn ($dir) => is_dir($dir));
+    }
+
+    private function scanTempStats(): array
+    {
+        $fileCount = 0;
+        $totalBytes = 0;
+
+        $walk = function (string $dir) use (&$walk, &$fileCount, &$totalBytes) {
+            $items = @scandir($dir) ?: [];
+            foreach ($items as $item) {
+                if ($item === '.' || $item === '..') {
+                    continue;
+                }
+                $path = $dir . DIRECTORY_SEPARATOR . $item;
+                if (is_dir($path)) {
+                    $walk($path);
+                } elseif (is_file($path)) {
+                    $fileCount++;
+                    $totalBytes += (int) filesize($path);
+                }
+            }
+        };
+
+        foreach ($this->tempDirectories() as $dir) {
+            $walk($dir);
+        }
+
+        $mb = $totalBytes / (1024 * 1024);
+
+        return [
+            'file_count' => $fileCount,
+            'size_bytes' => $totalBytes,
+            'size_human' => $mb >= 1
+                ? number_format($mb, 2) . ' MB'
+                : number_format($totalBytes / 1024, 1) . ' KB',
+            'paths' => $this->tempDirectories(),
+        ];
+    }
+
     public function edit()
     {
         return Inertia::render('Admin/Settings', [
-            'settings' => AppSetting::first()
+            'settings' => AppSetting::first(),
+            'temp_stats' => $this->scanTempStats(),
         ]);
     }
 
@@ -31,6 +78,8 @@ class SettingController extends Controller
             'registration_open' => 'required|boolean',
             'max_upload_size_mb' => 'required|integer|min:1',
             'max_upload_size_bulk_mb' => 'required|integer|min:1',
+            'max_prefix_length' => 'required|integer|min:2|max:9',
+            'timezone' => 'required|string|in:Asia/Jakarta,Asia/Makassar,Asia/Jayapura,UTC',
             'storage_mode' => 'required|in:local,s3,both',
             's3_bucket' => 'nullable|string',
             's3_region' => 'nullable|string',
@@ -46,6 +95,8 @@ class SettingController extends Controller
         $settings->registration_open = $request->input('registration_open');
         $settings->max_upload_size = $request->input('max_upload_size_mb') * 1024 * 1024;
         $settings->max_upload_size_bulk = $request->input('max_upload_size_bulk_mb') * 1024 * 1024;
+        $settings->max_prefix_length = (int) $request->input('max_prefix_length');
+        $settings->timezone = $request->input('timezone');
         $settings->storage_mode = $request->input('storage_mode');
         
         $settings->s3_bucket = $request->input('s3_bucket');
@@ -117,24 +168,38 @@ class SettingController extends Controller
 
     public function clearTemp()
     {
-        $tempDir = storage_path('app/public/uploads/temp');
-        if (is_dir($tempDir)) {
-            $files = scandir($tempDir);
-            foreach ($files as $file) {
-                if ($file === '.' || $file === '..') continue;
-                $filePath = $tempDir . '/' . $file;
-                if (is_dir($filePath)) {
-                    $batchFiles = scandir($filePath);
-                    foreach ($batchFiles as $bf) {
-                        if ($bf === '.' || $bf === '..') continue;
-                        @unlink($filePath . '/' . $bf);
-                    }
-                    @rmdir($filePath);
+        $deleteTree = function (string $dir) use (&$deleteTree) {
+            if (!is_dir($dir)) {
+                return;
+            }
+            $items = @scandir($dir) ?: [];
+            foreach ($items as $item) {
+                if ($item === '.' || $item === '..') {
+                    continue;
+                }
+                $path = $dir . DIRECTORY_SEPARATOR . $item;
+                if (is_dir($path)) {
+                    $deleteTree($path);
+                    @rmdir($path);
                 } else {
-                    @unlink($filePath);
+                    @unlink($path);
                 }
             }
+        };
+
+        foreach ($this->tempDirectories() as $dir) {
+            $deleteTree($dir);
+            // recreate empty temp root
+            if (!is_dir($dir)) {
+                @mkdir($dir, 0775, true);
+            }
         }
+
+        // Also ensure storage/app/temp exists after clean
+        if (!is_dir(storage_path('app/temp'))) {
+            @mkdir(storage_path('app/temp'), 0775, true);
+        }
+
         return redirect()->back()->with('success', 'Folder temp berhasil dibersihkan.');
     }
 }

@@ -10,8 +10,7 @@ use App\Helpers\StorageHelper;
 use Inertia\Inertia;
 use ZipArchive;
 use setasign\FpdiProtection\FpdiProtection;
-use chillerlan\QRCode\QRCode;
-use chillerlan\QRCode\QROptions;
+use App\Helpers\QrCodeHelper;
 use Throwable;
 use Illuminate\Support\Facades\Log;
 
@@ -165,13 +164,6 @@ class BulkSignController extends Controller
                 return response()->json(['status' => 'error', 'message' => 'Gagal membuka file ZIP sumber'], 422);
             }
 
-            $qrOptions = new QROptions([
-                'version'    => QRCode::VERSION_AUTO,
-                'outputType' => QRCode::OUTPUT_IMAGE_PNG,
-                'eccLevel'   => QRCode::ECC_L,
-                'scale'      => 5,
-            ]);
-
             $processedCount = 0;
             $errorCount = 0;
             $errors = [];
@@ -190,12 +182,7 @@ class BulkSignController extends Controller
                 try {
                     $verifyCode = $userPrefix . '-BLK-' . date('Ymd') . '-' . strtoupper(substr(md5(uniqid()), 0, 6));
                     $verifyUrl = route('verify', ['code' => $verifyCode]);
-                    
-                    $qrGenerator = new QRCode($qrOptions);
-                    $qrImage = $qrGenerator->render($verifyUrl);
-                    $qrBase64 = explode(',', $qrImage)[1];
-                    $qrTempFile = $tempDir . '/qr_' . $i . '.png';
-                    file_put_contents($qrTempFile, base64_decode($qrBase64));
+                    $qrTempFile = QrCodeHelper::toTempFile($verifyUrl, $tempDir, 5);
 
                     $pdf = new FpdiProtection('P', 'mm', 'A4', true);
                     

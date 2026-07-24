@@ -13,7 +13,7 @@ export default function AuthenticatedLayout({ header, children }) {
         const initial = [];
         if (path.startsWith('/admin/users') || path === '/history') initial.push('management');
         if (path.startsWith('/sign/')) initial.push('services');
-        if (path.startsWith('/admin/settings') || path.startsWith('/admin/storage') || path.startsWith('/admin/backup')) initial.push('system');
+        if (path.startsWith('/admin/settings') || path.startsWith('/admin/storage') || path.startsWith('/admin/backup') || path.startsWith('/admin/updater')) initial.push('system');
         if (path === '/profile') initial.push('account');
         return initial;
     });
@@ -182,7 +182,7 @@ export default function AuthenticatedLayout({ header, children }) {
                             <button
                                 onClick={() => toggleMenu('system')}
                                 className={`w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors ${
-                                    isCurrent(['admin.settings.edit', 'admin.storage.index', 'admin.backup.index']) ? 'text-white bg-slate-800' : 'text-slate-400 hover:text-white'
+                                    isCurrent(['admin.settings.edit', 'admin.storage.index', 'admin.backup.index', 'admin.updater.index']) ? 'text-white bg-slate-800' : 'text-slate-400 hover:text-white'
                                 }`}
                             >
                                 <div className="flex items-center">
@@ -220,6 +220,15 @@ export default function AuthenticatedLayout({ header, children }) {
                                         }`}
                                     >
                                         Manajemen Storage
+                                    </Link>
+                                    <Link
+                                        href={route('admin.updater.index')}
+                                        onClick={() => setSidebarOpen(false)}
+                                        className={`block py-2 text-sm transition-colors ${
+                                            route().current('admin.updater.index') ? 'text-blue-500 font-medium' : 'text-slate-500 hover:text-white'
+                                        }`}
+                                    >
+                                        Update App
                                     </Link>
                                     <Link
                                         href={route('admin.backup.index')}

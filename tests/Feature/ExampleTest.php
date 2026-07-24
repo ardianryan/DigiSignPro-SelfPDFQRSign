@@ -3,5 +3,6 @@
 it('returns a successful response', function () {
     $response = $this->get('/');
 
-    $response->assertStatus(200);
+    // Root redirects guests to the login page
+    $response->assertRedirect(route('login'));
 });

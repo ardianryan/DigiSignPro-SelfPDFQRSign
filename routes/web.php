@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\SettingController as AdminSettingController;
 use App\Http\Controllers\Admin\StorageController as AdminStorageController;
 use App\Http\Controllers\Admin\BackupController as AdminBackupController;
 use App\Http\Controllers\Admin\DatabaseController as AdminDatabaseController;
+use App\Http\Controllers\Admin\UpdaterController as AdminUpdaterController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -28,16 +29,17 @@ Route::middleware(['auth'])->group(function () {
     
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::post('/dashboard/prefix', [DashboardController::class, 'updatePrefix'])->name('dashboard.prefix');
     
-    // Signature History
+    // Signature History (batch route must be registered before {signature})
     Route::get('/history', [SignatureHistoryController::class, 'index'])->name('history.index');
-    Route::delete('/history/{id}', [SignatureHistoryController::class, 'destroy'])->name('history.destroy');
+    Route::delete('/history/batch/{batchId}', [SignatureHistoryController::class, 'destroyBatch'])->name('history.destroy_batch');
+    Route::delete('/history/{signature}', [SignatureHistoryController::class, 'destroy'])->name('history.destroy');
     
     // Profile settings
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    Route::post('/profile/signature', [ProfileController::class, 'uploadSignatureSpecimen'])->name('profile.signature');
 
     // Tanda Tangan Single PDF
     Route::get('/sign/single', [SingleSignController::class, 'create'])->name('sign.single.create');
@@ -70,6 +72,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/admin/backup', [AdminBackupController::class, 'run'])->name('admin.backup.run');
         Route::post('/admin/backup/restore', [AdminBackupController::class, 'restore'])->name('admin.backup.restore');
         Route::post('/admin/database/migrate', [AdminDatabaseController::class, 'migrate'])->name('admin.database.migrate');
+        Route::get('/admin/updater', [AdminUpdaterController::class, 'index'])->name('admin.updater.index');
+        Route::post('/admin/updater/analyze', [AdminUpdaterController::class, 'analyze'])->name('admin.updater.analyze');
+        Route::post('/admin/updater/execute', [AdminUpdaterController::class, 'execute'])->name('admin.updater.execute');
     });
 });
 

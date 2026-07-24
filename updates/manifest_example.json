@@ -1,0 +1,7 @@
+{
+  "version": "2.0.1",
+  "release_date": "2026-07-24",
+  "description": "Contoh paket update DigiSign Laravel. Sertakan folder files/ dan/atau update.sql di ZIP yang sama.",
+  "author": "Dev Team",
+  "sql_files": ["update.sql"]
+}

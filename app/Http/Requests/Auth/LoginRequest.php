@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\AppSetting;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -48,6 +49,18 @@ class LoginRequest extends FormRequest
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
             ]);
+        }
+
+        // Maintenance mode: only admins may stay logged in
+        $settings = AppSetting::first();
+        if ($settings && $settings->maintenance_mode) {
+            $user = Auth::user();
+            if (!$user || $user->role !== 'admin') {
+                Auth::logout();
+                throw ValidationException::withMessages([
+                    'email' => 'Aplikasi sedang dalam Mode Maintenance. Silakan coba lagi nanti.',
+                ]);
+            }
         }
 
         RateLimiter::clear($this->throttleKey());

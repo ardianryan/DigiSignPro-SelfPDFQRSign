@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, Fragment } from 'react';
 import Swal from 'sweetalert2';
 
 export default function History({ auth, signatures, filters }) {
@@ -33,6 +33,26 @@ export default function History({ auth, signatures, filters }) {
             if (result.isConfirmed) {
                 router.delete(route('history.destroy', id), {
                     onSuccess: () => Swal.fire('Terhapus!', 'Riwayat berhasil dihapus.', 'success'),
+                    onError: (err) => Swal.fire('Gagal!', err.error || 'Terjadi kesalahan.', 'error')
+                });
+            }
+        });
+    };
+
+    const handleDeleteBatch = (batchId, totalItems) => {
+        Swal.fire({
+            title: 'Hapus seluruh batch?',
+            text: `Semua ${totalItems} dokumen dalam batch ini beserta file fisiknya akan dihapus permanen.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ya, hapus batch!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.delete(route('history.destroy_batch', batchId), {
+                    onSuccess: () => Swal.fire('Terhapus!', 'Batch berhasil dihapus.', 'success'),
                     onError: (err) => Swal.fire('Gagal!', err.error || 'Terjadi kesalahan.', 'error')
                 });
             }
@@ -184,10 +204,14 @@ export default function History({ auth, signatures, filters }) {
                                                 const totalItems = group.items.length;
 
                                                 return (
-                                                    <tbody key={`batch-group-${batchId}`} className="divide-y divide-slate-100 dark:divide-gray-800">
+                                                    <Fragment key={`batch-group-${batchId}`}>
                                                         {/* Batch Header Row */}
-                                                        <tr className="bg-slate-50 dark:bg-gray-700 hover:bg-slate-100 dark:hover:bg-gray-600 cursor-pointer transition-colors" onClick={() => toggleBatch(batchId)}>
-                                                            <td className="px-6 py-4 whitespace-nowrap" colSpan={auth.user.role === 'admin' ? 4 : 3}>
+                                                        <tr className="bg-slate-50 dark:bg-gray-700 hover:bg-slate-100 dark:hover:bg-gray-600 transition-colors">
+                                                            <td
+                                                                className="px-6 py-4 whitespace-nowrap cursor-pointer"
+                                                                colSpan={auth.user.role === 'admin' ? 3 : 2}
+                                                                onClick={() => toggleBatch(batchId)}
+                                                            >
                                                                 <div className="flex items-center">
                                                                     <svg className={`w-5 h-5 text-slate-500 mr-3 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
@@ -205,10 +229,32 @@ export default function History({ auth, signatures, filters }) {
                                                                     </div>
                                                                 </div>
                                                             </td>
-                                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                                <span className="text-blue-600 dark:text-blue-400 font-semibold hover:underline">
+                                                            <td
+                                                                className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400 cursor-pointer"
+                                                                onClick={() => toggleBatch(batchId)}
+                                                            >
+                                                                {firstRow.created_at}
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => toggleBatch(batchId)}
+                                                                    className="text-blue-600 dark:text-blue-400 font-semibold hover:underline"
+                                                                >
                                                                     {isExpanded ? 'Sembunyikan' : 'Tampilkan'}
-                                                                </span>
+                                                                </button>
+                                                                {(auth.user.role === 'admin' || auth.user.id === firstRow.user_id) && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleDeleteBatch(batchId, totalItems);
+                                                                        }}
+                                                                        className="text-red-600 hover:text-red-800 dark:text-red-400 font-semibold"
+                                                                    >
+                                                                        Hapus Batch
+                                                                    </button>
+                                                                )}
                                                             </td>
                                                         </tr>
 
@@ -259,7 +305,7 @@ export default function History({ auth, signatures, filters }) {
                                                                 </td>
                                                             </tr>
                                                         ))}
-                                                    </tbody>
+                                                    </Fragment>
                                                 );
                                             }
                                         })

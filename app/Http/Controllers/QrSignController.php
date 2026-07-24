@@ -6,9 +6,8 @@ use Illuminate\Http\Request;
 
 use App\Models\Signature;
 use App\Helpers\StorageHelper;
+use App\Helpers\QrCodeHelper;
 use Inertia\Inertia;
-use chillerlan\QRCode\QRCode;
-use chillerlan\QRCode\QROptions;
 use setasign\FpdiProtection\FpdiProtection;
 use Throwable;
 use Illuminate\Support\Facades\Log;
@@ -34,6 +33,8 @@ class QrSignController extends Controller
         }
 
         $signatures = $query->latest()->paginate(10)->through(function ($sig) {
+            $signedAt = $sig->signed_at ?? $sig->created_at;
+
             return [
                 'id' => $sig->id,
                 'document_number' => $sig->document_number,
@@ -42,7 +43,7 @@ class QrSignController extends Controller
                 'verify_code' => $sig->verify_code,
                 'file_path' => $sig->file_path,
                 'file_url' => $sig->file_path ? StorageHelper::getFileUrl($sig->file_path) : null,
-                'signed_at' => $sig->signed_at->format('d M Y H:i'),
+                'signed_at' => $signedAt ? $signedAt->format('d M Y H:i') : null,
             ];
         });
 
@@ -73,16 +74,8 @@ class QrSignController extends Controller
             }
 
             $verifyUrl = route('verify', ['code' => $data->verify_code]);
-
-            // Generate QR Code Base64
-            $options = new QROptions([
-                'version'    => QRCode::VERSION_AUTO,
-                'outputType' => QRCode::OUTPUT_IMAGE_PNG,
-                'eccLevel'   => QRCode::ECC_L,
-                'scale'      => 10,
-            ]);
-            $qr = new QRCode($options);
-            $qrImage = $qr->render($verifyUrl);
+            // Generate QR Code as data-URI PNG (chillerlan v6)
+            $qrImage = QrCodeHelper::toDataUri($verifyUrl, 10);
         }
 
         return Inertia::render('Sign/QrCreate', [
@@ -114,10 +107,12 @@ class QrSignController extends Controller
 
             session(['tte_qr_password' => $request->input('pdf_password')]);
 
+            $subject = $request->input('subject');
             $signature = Signature::create([
                 'user_id' => $user->id,
+                'document_name' => $subject ?: ('TTE-QR-'.$request->input('document_number')),
                 'document_number' => $request->input('document_number'),
-                'document_subject' => $request->input('subject'),
+                'document_subject' => $subject,
                 'document_attachment' => $request->input('attachment'),
                 'verify_code' => $verifyCode,
                 'signature_type' => 'qr_manual',

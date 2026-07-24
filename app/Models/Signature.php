@@ -20,6 +20,13 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 ])]
 class Signature extends Model
 {
+    protected function casts(): array
+    {
+        return [
+            'signed_at' => 'datetime',
+        ];
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);

@@ -9,8 +9,7 @@ use App\Models\AppSetting;
 use App\Helpers\StorageHelper;
 use Inertia\Inertia;
 use setasign\FpdiProtection\FpdiProtection;
-use chillerlan\QRCode\QRCode;
-use chillerlan\QRCode\QROptions;
+use App\Helpers\QrCodeHelper;
 use Throwable;
 use Illuminate\Support\Facades\Log;
 
@@ -37,6 +36,7 @@ class SingleSignController extends Controller
             'signed_date' => 'nullable|date',
             'show_qr_caption' => 'nullable|boolean',
             'qr_caption_position' => 'nullable|string|in:bottom,right',
+            'pdf_password' => 'required|string',
         ]);
 
         try {
@@ -69,25 +69,12 @@ class SingleSignController extends Controller
             // Dynamic Verification URL
             $verifyUrl = route('verify', ['code' => $code]);
 
-            // 2. Generate QR Code
-            $options = new QROptions([
-                'version'    => QRCode::VERSION_AUTO,
-                'outputType' => QRCode::OUTPUT_IMAGE_PNG,
-                'eccLevel'   => QRCode::ECC_L,
-                'scale'      => 5,
-            ]);
-            
-            $qrOutputInterface = new QRCode($options);
-            $qrImage = $qrOutputInterface->render($verifyUrl);
-            
-            // Save QR base64 to temporary local file
-            $base64 = explode(',', $qrImage)[1];
+            // 2. Generate QR Code (PNG via chillerlan v6 API)
             $tempDir = storage_path('app/temp');
             if (!file_exists($tempDir)) {
                 mkdir($tempDir, 0777, true);
             }
-            $qrTempFile = $tempDir . '/qr_' . uniqid() . '.png';
-            file_put_contents($qrTempFile, base64_decode($base64));
+            $qrTempFile = QrCodeHelper::toTempFile($verifyUrl, $tempDir, 5);
 
             // 3. Process PDF with FPDI
             $pdf = new FpdiProtection('P', 'mm', 'A4', true);
@@ -172,8 +159,8 @@ class SingleSignController extends Controller
                 }
             }
 
-            // Encrypt and protect PDF
-            $pdf_pass = $user->signature_prefix ?: 'DS';
+            // Encrypt and protect PDF with user-provided parafrase password
+            $pdf_pass = $request->input('pdf_password');
             $permissions = FpdiProtection::PERM_PRINT | FpdiProtection::PERM_COPY | FpdiProtection::PERM_ACCESSIBILITY;
             $pdf->setProtection($permissions, '', $pdf_pass);
 

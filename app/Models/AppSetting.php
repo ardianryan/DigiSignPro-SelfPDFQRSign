@@ -27,4 +27,15 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 class AppSetting extends Model
 {
     protected $table = 'app_settings';
+
+    protected function casts(): array
+    {
+        return [
+            'maintenance_mode' => 'boolean',
+            'registration_open' => 'boolean',
+            'max_upload_size' => 'integer',
+            'max_upload_size_bulk' => 'integer',
+            'max_prefix_length' => 'integer',
+        ];
+    }
 }
