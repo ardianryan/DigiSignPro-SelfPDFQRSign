@@ -145,7 +145,11 @@ class Storage {
             $endpoint = rtrim(self::$settings['s3_endpoint'] ?? '', '/');
             $bucket = self::$settings['s3_bucket'] ?? '';
             
-            if (empty($endpoint)) return $filePath;
+            if (empty($endpoint)) {
+                $region = self::$settings['s3_region'] ?? 'us-east-1';
+                if (empty($region)) $region = 'us-east-1';
+                return "https://{$bucket}.s3.{$region}.amazonaws.com/" . ltrim($key, '/');
+            }
 
             // Cloudflare R2 structure or standard S3
             if (strpos($endpoint, $bucket) !== false) {

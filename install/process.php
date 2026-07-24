@@ -86,7 +86,7 @@ if ($action === 'install') {
         reset_token VARCHAR(255) DEFAULT NULL,
         reset_expires_at DATETIME DEFAULT NULL,
         signature_path VARCHAR(255) DEFAULT NULL,
-        signature_prefix VARCHAR(3) DEFAULT 'DS',
+        signature_prefix VARCHAR(9) DEFAULT 'DS',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )";
     if (!$conn->query($sql_users)) jsonResponse('error', 'Gagal membuat tabel users: ' . $conn->error);

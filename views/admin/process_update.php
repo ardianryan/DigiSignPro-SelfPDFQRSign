@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../includes/auth_session.php';
 require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../includes/migration_helper.php';
 requireAdmin();
 
 header('Content-Type: application/json');
@@ -36,7 +37,7 @@ function recursiveCopy($src, $dst) {
     closedir($dir);
 }
 
-$action = $_POST['action'] ?? 'execute'; // Default to execute for backward compatibility if needed, but we'll use 'analyze' first
+$action = $_POST['action'] ?? 'execute';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['status' => 'error', 'message' => 'Invalid Request']);
@@ -45,6 +46,30 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
     echo json_encode(['status' => 'error', 'message' => 'CSRF Token Validation Failed.']);
+    exit;
+}
+
+// --- ACTION: MIGRATE ---
+if ($action === 'migrate') {
+    try {
+        $results = run_database_migration($conn);
+        $message = "Migrasi database berhasil dijalankan.";
+        if (!empty($results)) {
+            $message .= "\nDetail:\n- " . implode("\n- ", $results);
+        } else {
+            $message .= " Tidak ada pembaruan struktur database baru yang diperlukan.";
+        }
+        echo json_encode([
+            'status' => 'success',
+            'message' => $message,
+            'details' => $results
+        ]);
+    } catch (Exception $e) {
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Gagal menjalankan migrasi database: ' . $e->getMessage()
+        ]);
+    }
     exit;
 }
 
@@ -72,6 +97,16 @@ if ($action === 'analyze') {
 
     $zip = new ZipArchive;
     if ($zip->open($file['tmp_name']) === TRUE) {
+        // Security Check: Prevent Zip Slip (path traversal in ZIP entry names)
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $entryName = $zip->getNameIndex($i);
+            if (strpos($entryName, '..') !== false || strpos($entryName, '/') === 0 || strpos($entryName, '\\') === 0) {
+                $zip->close();
+                cleanup($tempDir);
+                echo json_encode(['status' => 'error', 'message' => 'Keamanan: Nama file di dalam ZIP tidak valid (mengandung path traversal).']);
+                exit;
+            }
+        }
         $zip->extractTo($tempDir);
         $zip->close();
     } else {
@@ -106,7 +141,7 @@ if ($action === 'analyze') {
 // --- ACTION: EXECUTE ---
 if ($action === 'execute') {
     $tempId = $_POST['temp_id'] ?? '';
-    if (empty($tempId) || !preg_match('/^upd_[a-f0-8]+$/', $tempId)) {
+    if (empty($tempId) || !preg_match('/^upd_[a-f0-9]+$/', $tempId)) {
         echo json_encode(['status' => 'error', 'message' => 'ID Update tidak valid.']);
         exit;
     }
@@ -129,6 +164,10 @@ if ($action === 'execute') {
         }
 
         foreach (array_unique($sqlFiles) as $sqlFile) {
+            // Security Check: Prevent directory traversal in SQL filename
+            if (strpos($sqlFile, '..') !== false || strpos($sqlFile, '/') === 0 || strpos($sqlFile, '\\') === 0) {
+                throw new Exception("Security Error: Path file SQL tidak valid.");
+            }
             $sqlPath = $tempDir . '/' . $sqlFile;
             if (file_exists($sqlPath)) {
                 $sqlContent = file_get_contents($sqlPath);

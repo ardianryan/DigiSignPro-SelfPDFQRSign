@@ -510,7 +510,11 @@ $max_upload_mb = round($max_upload_size / 1048576);
                         }).then((result) => {
                             if (result.isConfirmed) {
                                 // Download
-                                window.location.href = '/' + data.file_path;
+                                let targetUrl = data.file_path;
+                                if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+                                    targetUrl = '/' + targetUrl;
+                                }
+                                window.location.href = targetUrl;
                                 // Optional: Reload after download if desired, or let user decide
                                 setTimeout(() => window.location.reload(), 2000);
                             } else if (result.isDenied) {

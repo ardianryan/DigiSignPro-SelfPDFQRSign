@@ -114,7 +114,15 @@ if ($action === 'install') {
         max_upload_size INT(11) DEFAULT 10485760,
         max_upload_size_bulk INT(11) DEFAULT 52428800,
         max_prefix_length INT(2) DEFAULT 3,
-        timezone VARCHAR(64) DEFAULT 'Asia/Jakarta'
+        timezone VARCHAR(64) DEFAULT 'Asia/Jakarta',
+        storage_mode ENUM('local', 's3', 'both') DEFAULT 'local',
+        s3_endpoint VARCHAR(255) DEFAULT NULL,
+        s3_region VARCHAR(50) DEFAULT 'us-east-1',
+        s3_bucket VARCHAR(100) DEFAULT NULL,
+        s3_access_key VARCHAR(255) DEFAULT NULL,
+        s3_secret_key VARCHAR(255) DEFAULT NULL,
+        s3_directory VARCHAR(100) DEFAULT 'digisign/',
+        s3_public_url VARCHAR(255) DEFAULT NULL
     )";
     if (!$conn->query($sql_settings)) jsonResponse('error', 'Gagal membuat tabel settings: ' . $conn->error);
 
@@ -136,7 +144,7 @@ if ($action === 'install') {
     if (!$conn->query($sql_signatures)) jsonResponse('error', 'Gagal membuat tabel signatures: ' . $conn->error);
 
     // Insert Default Settings
-    $conn->query("INSERT IGNORE INTO app_settings (id, app_name, maintenance_mode, registration_open, max_upload_size, max_upload_size_bulk, max_prefix_length, timezone) VALUES (1, 'DigiSign Pro', 0, 1, 10485760, 52428800, 3, 'Asia/Jakarta')");
+    $conn->query("INSERT IGNORE INTO app_settings (id, app_name, maintenance_mode, registration_open, max_upload_size, max_upload_size_bulk, max_prefix_length, timezone, storage_mode, s3_directory) VALUES (1, 'DigiSign Pro', 0, 1, 10485760, 52428800, 3, 'Asia/Jakarta', 'local', 'digisign/')");
 
     // 3. Create Admin Account
     $adminName = $adminConfig['name'];
@@ -163,6 +171,10 @@ if ($action === 'install') {
     if (!file_put_contents($lockFile, 'INSTALLED ON ' . date('Y-m-d H:i:s'))) {
         jsonResponse('error', 'Gagal membuat lock file. Instalasi mungkin berhasil tapi tidak terkunci.');
     }
+
+    // Create Version File
+    $versionFile = __DIR__ . '/../../config/version.lock';
+    file_put_contents($versionFile, '1.3.4');
 
     jsonResponse('success', 'Instalasi Berhasil!');
 }

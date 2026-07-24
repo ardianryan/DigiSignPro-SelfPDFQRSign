@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../../includes/auth_session.php';
+require_once __DIR__ . '/../../includes/migration_helper.php';
 requireAdmin();
 
 $page_title = "Update Aplikasi";
@@ -8,6 +9,10 @@ require_once __DIR__ . '/../../includes/sidebar.php';
 
 $lockFile = __DIR__ . '/../../config/version.lock';
 $currentVersion = file_exists($lockFile) ? trim(file_get_contents($lockFile)) : '1.0.0';
+
+// Check database migration status
+$missing_db_items = check_database_migration($conn);
+$has_db_updates = !empty($missing_db_items);
 ?>
 
 <div class="max-w-4xl mx-auto" x-data="updaterApp()">
@@ -15,6 +20,49 @@ $currentVersion = file_exists($lockFile) ? trim(file_get_contents($lockFile)) : 
         <h2 class="text-2xl font-bold text-slate-800">Update System</h2>
         <p class="text-slate-500">Upgrade aplikasi ke versi terbaru melalui paket update (ZIP).</p>
     </div>
+
+    <!-- Database Migration Check Section -->
+    <?php if ($has_db_updates): ?>
+    <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-6 rounded-r-xl shadow-sm">
+        <div class="flex items-start gap-4">
+            <div class="p-2 bg-red-100 rounded-lg text-red-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            </div>
+            <div class="flex-1">
+                <h3 class="text-lg font-bold text-red-800">Database Belum Sinkron!</h3>
+                <p class="text-sm text-red-600 mt-1 leading-relaxed">
+                    Ditemukan ketidaksesuaian struktur database (kolom/tabel yang hilang). Anda perlu menjalankan migrasi database untuk menyinkronkannya agar aplikasi berjalan dengan benar.
+                </p>
+                <div class="mt-3">
+                    <details class="text-xs text-red-700 cursor-pointer">
+                        <summary class="font-semibold hover:underline">Lihat Detail Ketidaksesuaian (<?php echo count($missing_db_items); ?> item)</summary>
+                        <ul class="list-disc list-inside mt-2 space-y-1 bg-red-100/50 p-2.5 rounded-lg border border-red-200">
+                            <?php foreach ($missing_db_items as $item): ?>
+                                <li><?php echo htmlspecialchars($item); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </details>
+                </div>
+                <div class="mt-4 flex gap-3">
+                    <button @click="runDbMigration()" :disabled="isMigrating" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-5 rounded-lg text-sm shadow-md transition-all flex items-center gap-2">
+                        <span x-show="!isMigrating">Jalankan Migrasi Database Sekarang</span>
+                        <span x-show="isMigrating">Menjalankan Migrasi...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php else: ?>
+    <div class="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-xl shadow-sm flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span class="text-sm font-semibold text-green-800">Struktur Database Sinkron & Up-to-Date!</span>
+        </div>
+        <button @click="runDbMigration('force')" :disabled="isMigrating" class="text-xs text-green-700 hover:underline font-semibold bg-transparent border-0 cursor-pointer">
+            Jalankan Ulang Migrasi
+        </button>
+    </div>
+    <?php endif; ?>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Current Version Info -->
@@ -214,6 +262,47 @@ function updaterApp() {
                 Swal.fire('Error', 'Terjadi kesalahan jaringan atau server saat eksekusi.', 'error');
                 this.isProcessing = false;
                 this.step = 'preview';
+            }
+        },
+
+        isMigrating: false,
+
+        async runDbMigration(mode = 'normal') {
+            if (mode === 'force' && !confirm('Apakah Anda yakin ingin menjalankan ulang migrasi database?')) {
+                return;
+            }
+            
+            this.isMigrating = true;
+            
+            const formData = new FormData();
+            formData.append('action', 'migrate');
+            formData.append('csrf_token', '<?php echo get_csrf_token(); ?>');
+            
+            try {
+                const response = await fetch('<?php echo BASE_URL; ?>/admin/process_update', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    Swal.fire({
+                        title: 'Migrasi Berhasil',
+                        text: result.message,
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire('Migrasi Gagal', result.message, 'error');
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Error', 'Terjadi kesalahan saat memproses migrasi.', 'error');
+            } finally {
+                this.isMigrating = false;
             }
         }
     }

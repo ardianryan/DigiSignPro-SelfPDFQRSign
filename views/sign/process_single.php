@@ -231,7 +231,7 @@ try {
     if ($stmt->execute()) {
         echo json_encode([
             'status' => 'success',
-            'file_path' => $outputPath,
+            'file_path' => Storage::getFileUrl($conn, $outputPath),
             'verify_code' => $code
         ]);
     } else {
