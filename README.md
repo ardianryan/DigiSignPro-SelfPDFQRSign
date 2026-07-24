@@ -67,6 +67,26 @@ Migrasi bersifat **idempotent** dan mendukung **DB DigiSign lama**:
 
 **Deploy kode aplikasi:** via CI/CD (git pull / build / deploy). Unggah paket update ZIP sudah dihapus / deprecated.
 
+### Production: halaman putih / console `5173 CONNECTION_REFUSED`
+
+Laravel mencoba Vite **dev server** jika file `public/hot` ada. Di production:
+
+```bash
+rm -f public/hot
+# pastikan asset build ada:
+ls public/build/manifest.json
+# jika belum ada:
+npm ci && npm run build
+
+php artisan optimize:clear
+# .env production:
+# APP_ENV=production
+# APP_DEBUG=false
+# APP_URL=https://sign.ppti.me
+```
+
+Repo menyertakan `public/build` agar `git pull` cukup untuk CSS/JS (tanpa `npm run dev` di server).
+
 **Pindah dari DigiSign PHP native (sekali saja):**
 ```bash
 php artisan digisign:legacy-cutover
