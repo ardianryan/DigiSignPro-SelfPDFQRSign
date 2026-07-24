@@ -30,6 +30,8 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
             'role' => 'admin',
             'position' => 'IT Administrator',
+            'api_key' => User::generateApiKey(),
+            'api_key_created_at' => now(),
         ]);
 
         // 3. Seed Regular User
@@ -39,6 +41,8 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
             'role' => 'user',
             'position' => 'Staff',
+            'api_key' => User::generateApiKey(),
+            'api_key_created_at' => now(),
         ]);
     }
 }

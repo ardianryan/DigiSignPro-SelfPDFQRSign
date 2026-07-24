@@ -18,9 +18,18 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
+        $user = $request->user();
+        // Ensure every user has an API key for REST integrations
+        $user->ensureApiKey();
+
         return Inertia::render('Profile/Edit', [
-            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
+            'mustVerifyEmail' => $user instanceof MustVerifyEmail,
             'status' => session('status'),
+            'apiKey' => $user->api_key,
+            'apiKeyCreatedAt' => $user->api_key_created_at?->toIso8601String(),
+            'apiBaseUrl' => url('/api/v1'),
+            'quickapiUrl' => route('profile.api_docs.quickapi'),
+            'publicQuickapiUrl' => url('/api/v1/docs/quickapi.md'),
         ]);
     }
 

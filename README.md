@@ -132,6 +132,32 @@ Berikut adalah tabel pemetaan halaman antarmuka versi PHP Native lama ke versi L
 
 ---
 
+## REST API
+
+Base path: `/api/v1`
+
+| Auth | Header |
+|------|--------|
+| Per-user API key | `Authorization: Bearer digi_...` atau `X-API-Key: digi_...` |
+
+Setiap user memiliki API key di **Profil Saya** (lihat / regenerate / unduh `quickapi.md`).
+
+| Method | Endpoint | Auth | Keterangan |
+|--------|----------|------|------------|
+| GET | `/api/v1/health` | — | Health check |
+| GET | `/api/v1/verify/{code}` | — | Verifikasi publik |
+| GET | `/api/v1/docs/quickapi.md` | — | Docs ringkas (AI agent) |
+| GET | `/api/v1/me` | key | Profil user |
+| GET | `/api/v1/signatures` | key | List riwayat |
+| GET | `/api/v1/signatures/{id}` | key | Detail |
+| DELETE | `/api/v1/signatures/{id}` | key | Hapus |
+| POST | `/api/v1/sign/single` | key | Tanda tangan PDF (multipart) |
+| POST | `/api/v1/sign/qr-manual` | key | Buat TTE QR manual |
+
+File lengkap untuk AI agent: `docs/quickapi.md` (juga diunduh dari Profil).
+
+---
+
 ## Penanganan Migrasi Database via Web Panel
 * **Menu**: Admin → **Migrasi Database**
 * **Route**: `POST /admin/database/migrate` (admin only)

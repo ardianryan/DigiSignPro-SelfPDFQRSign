@@ -32,6 +32,8 @@ class UserFactory extends Factory
             'role' => 'user',
             'position' => 'Staff',
             'signature_prefix' => 'DS',
+            'api_key' => 'digi_'.Str::random(48),
+            'api_key_created_at' => now(),
             'remember_token' => Str::random(10),
         ];
     }

@@ -62,6 +62,8 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
             'role' => 'user',
             'signature_prefix' => 'DS',
+            'api_key' => User::generateApiKey(),
+            'api_key_created_at' => now(),
         ]);
 
         event(new Registered($user));

@@ -91,6 +91,14 @@ class LegacyDigisignSchema
                 $table->timestamp('updated_at')->nullable();
                 $steps[] = "Kolom users.updated_at ditambahkan.";
             }
+            if (!Schema::hasColumn('users', 'api_key')) {
+                $table->string('api_key', 64)->nullable()->unique();
+                $steps[] = "Kolom users.api_key ditambahkan.";
+            }
+            if (!Schema::hasColumn('users', 'api_key_created_at')) {
+                $table->timestamp('api_key_created_at')->nullable();
+                $steps[] = "Kolom users.api_key_created_at ditambahkan.";
+            }
         });
 
         // Legacy reset_token columns may remain; Laravel uses password_reset_tokens instead.

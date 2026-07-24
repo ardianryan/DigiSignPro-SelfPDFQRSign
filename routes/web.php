@@ -13,6 +13,8 @@ use App\Http\Controllers\Admin\StorageController as AdminStorageController;
 use App\Http\Controllers\Admin\BackupController as AdminBackupController;
 use App\Http\Controllers\Admin\DatabaseController as AdminDatabaseController;
 use App\Http\Controllers\Admin\UpdaterController as AdminUpdaterController;
+use App\Http\Controllers\ApiKeyController;
+use App\Http\Controllers\Api\ApiDocsController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -40,6 +42,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::post('/profile/api-key/regenerate', [ApiKeyController::class, 'regenerate'])->name('profile.api_key.regenerate');
+    Route::get('/profile/api-docs/quickapi.md', [ApiDocsController::class, 'downloadQuickapi'])->name('profile.api_docs.quickapi');
 
     // Tanda Tangan Single PDF
     Route::get('/sign/single', [SingleSignController::class, 'create'])->name('sign.single.create');

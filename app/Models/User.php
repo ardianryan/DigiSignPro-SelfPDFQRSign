@@ -10,8 +10,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'role', 'position', 'signature_path', 'signature_prefix'])]
-#[Hidden(['password', 'remember_token'])]
+#[Fillable(['name', 'email', 'password', 'role', 'position', 'signature_path', 'signature_prefix', 'api_key', 'api_key_created_at'])]
+#[Hidden(['password', 'remember_token', 'api_key'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -31,7 +31,25 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'api_key_created_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public static function generateApiKey(): string
+    {
+        return 'digi_'.\Illuminate\Support\Str::random(48);
+    }
+
+    public function ensureApiKey(): string
+    {
+        if (empty($this->api_key)) {
+            $this->forceFill([
+                'api_key' => static::generateApiKey(),
+                'api_key_created_at' => now(),
+            ])->save();
+        }
+
+        return $this->api_key;
     }
 }
