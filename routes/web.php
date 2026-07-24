@@ -55,6 +55,9 @@ Route::middleware(['auth'])->group(function () {
     // 3. Admin-only routes
     Route::middleware(['can:admin-only'])->group(function () {
         Route::get('/admin/users', [AdminUserController::class, 'index'])->name('admin.users.index');
+        Route::post('/admin/users', [AdminUserController::class, 'store'])->name('admin.users.store');
+        Route::patch('/admin/users/{user}', [AdminUserController::class, 'update'])->name('admin.users.update');
+        Route::delete('/admin/users/{user}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
         Route::get('/admin/settings', [AdminSettingController::class, 'edit'])->name('admin.settings.edit');
         Route::put('/admin/settings', [AdminSettingController::class, 'update'])->name('admin.settings.update');
         Route::get('/admin/storage', [AdminStorageController::class, 'index'])->name('admin.storage.index');
