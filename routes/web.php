@@ -61,9 +61,14 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/admin/users/{user}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
         Route::get('/admin/settings', [AdminSettingController::class, 'edit'])->name('admin.settings.edit');
         Route::put('/admin/settings', [AdminSettingController::class, 'update'])->name('admin.settings.update');
+        Route::delete('/admin/settings/logo', [AdminSettingController::class, 'deleteLogo'])->name('admin.settings.delete_logo');
+        Route::post('/admin/settings/test-s3', [AdminSettingController::class, 'testS3'])->name('admin.settings.test_s3');
+        Route::post('/admin/settings/clear-temp', [AdminSettingController::class, 'clearTemp'])->name('admin.settings.clear_temp');
         Route::get('/admin/storage', [AdminStorageController::class, 'index'])->name('admin.storage.index');
+        Route::delete('/admin/storage', [AdminStorageController::class, 'destroy'])->name('admin.storage.destroy');
         Route::get('/admin/backup', [AdminBackupController::class, 'index'])->name('admin.backup.index');
         Route::post('/admin/backup', [AdminBackupController::class, 'run'])->name('admin.backup.run');
+        Route::post('/admin/backup/restore', [AdminBackupController::class, 'restore'])->name('admin.backup.restore');
         Route::post('/admin/database/migrate', [AdminDatabaseController::class, 'migrate'])->name('admin.database.migrate');
     });
 });
