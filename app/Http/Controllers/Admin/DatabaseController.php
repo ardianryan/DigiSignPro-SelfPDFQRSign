@@ -4,22 +4,44 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Support\LegacyDigisignSchema;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 use Throwable;
 
 class DatabaseController extends Controller
 {
     /**
-     * Run schema adaptation for DigiSign legacy DBs + Laravel migrations.
-     * Used from Admin → Update App → "Jalankan Migrasi Database".
+     * Run schema adaptation + Laravel migrations.
+     * Requires re-entering the current admin password.
      */
-    public function migrate()
+    public function migrate(Request $request)
     {
+        $request->validate([
+            'password' => ['required', 'string'],
+        ], [
+            'password.required' => 'Password admin wajib diisi untuk menjalankan migrasi.',
+        ]);
+
+        $user = $request->user();
+
+        if (! $user || $user->role !== 'admin') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Hanya admin yang dapat menjalankan migrasi.',
+            ], 403);
+        }
+
+        if (! Hash::check($request->input('password'), $user->password)) {
+            throw ValidationException::withMessages([
+                'password' => 'Password admin tidak cocok. Migrasi dibatalkan.',
+            ]);
+        }
+
         try {
-            // 1) Always adapt legacy DigiSign schema first (idempotent)
             $legacySteps = (new LegacyDigisignSchema)->adapt();
 
-            // 2) Run pending Laravel migration files
             $exitCode = Artisan::call('migrate', [
                 '--force' => true,
             ]);

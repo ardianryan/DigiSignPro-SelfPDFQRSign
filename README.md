@@ -57,13 +57,15 @@ php artisan migrate
 
 Migrasi bersifat **idempotent** dan mendukung **DB DigiSign lama**:
 - Jika tabel sudah ada, hanya menambahkan kolom Laravel yang kurang (bukan drop data).
-- Bisa dijalankan ulang lewat **Admin → Update App → Jalankan Migrasi Database**.
+- Bisa dijalankan ulang lewat **Admin → Migrasi Database** (wajib isi ulang password admin).
 - Adapter legacy juga mengisi `document_name` kosong dan membuat tabel support (`sessions`, `password_reset_tokens`, cache, jobs).
 
 **Import data lama (ringkas):**
 1. Arahkan `.env` ke database MySQL lama, **atau** import dump `users` / `app_settings` / `signatures`.
-2. Jalankan `php artisan migrate` (atau tombol migrasi di panel admin).
+2. Jalankan `php artisan migrate` (atau tombol migrasi di panel admin + password).
 3. Pastikan file upload/S3 path masih valid.
+
+**Deploy kode aplikasi:** via CI/CD (git pull / build / deploy). Unggah paket update ZIP sudah dihapus / deprecated.
 
 ### 7. Seed Data Awal (Admin + Settings)
 ```bash
@@ -123,39 +125,16 @@ Berikut adalah tabel pemetaan halaman antarmuka versi PHP Native lama ke versi L
 | **Manajemen Pengguna** | `views/admin/users.php` | `resources/js/Pages/Admin/Users.jsx` |
 | **Pengaturan Aplikasi** | `views/admin/settings.php` | `resources/js/Pages/Admin/Settings.jsx` |
 | **Manajemen Storage** | `views/admin/storage.php` | `resources/js/Pages/Admin/Storage.jsx` |
-| **Update App** | `views/admin/updater.php` | `resources/js/Pages/Admin/Updater.jsx` |
+| **Migrasi Database** | `views/admin/updater.php` (ZIP deprecated) | `resources/js/Pages/Admin/Updater.jsx` |
 | **Backup & Restore** | `views/admin/backup.php` | `resources/js/Pages/Admin/Backup.jsx` |
 | **Verifikasi Publik** | `views/verify/index.php` | `resources/js/Pages/Verify.jsx` |
 | **Cookie Consent** | `includes/cookie_consent.php` | `resources/js/Components/CookieConsent.jsx` |
 
 ---
 
-## Update App (ZIP Package)
-
-Admin → **Sistem & Tools → Update App**.
-
-Struktur paket ZIP:
-```
-manifest.json   # wajib
-files/          # opsional — struktur file aplikasi yang ditimpa
-update.sql      # opsional — SQL tambahan
-```
-
-Contoh `manifest.json`:
-```json
-{
-  "version": "2.0.1",
-  "release_date": "2026-07-24",
-  "description": "Perbaikan minor & patch keamanan.",
-  "author": "Dev Team"
-}
-```
-
-File sensitif **tidak ditimpa**: `.env`, `vendor/`, `node_modules/`, `.git/`, log cache.
-
----
-
 ## Penanganan Migrasi Database via Web Panel
-* **Menu**: Admin → Update App → Jalankan Migrasi Database  
-* **Route**: `POST /admin/database/migrate` (admin only)  
-* **Fungsi**: Memanggil `Artisan::call('migrate', ['--force' => true])` tanpa SSH.
+* **Menu**: Admin → **Migrasi Database**
+* **Route**: `POST /admin/database/migrate` (admin only)
+* **Keamanan**: wajib mengisi ulang password admin
+* **Fungsi**: adaptasi skema DigiSign legacy + `Artisan::call('migrate', ['--force' => true])` tanpa SSH
+* **Deploy kode**: gunakan CI/CD (bukan unggah ZIP)

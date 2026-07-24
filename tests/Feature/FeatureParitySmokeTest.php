@@ -6,11 +6,8 @@ use App\Models\AppSetting;
 use App\Models\Signature;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
-use ZipArchive;
 
 class FeatureParitySmokeTest extends TestCase
 {
@@ -341,83 +338,51 @@ class FeatureParitySmokeTest extends TestCase
         ]);
     }
 
-    public function test_updater_analyze_invalid_zip(): void
-    {
-        ['admin' => $admin] = $this->seedApp();
-
-        $tmp = sys_get_temp_dir().'/bad_'.uniqid().'.zip';
-        file_put_contents($tmp, 'not-a-zip-content');
-
-        $file = new UploadedFile($tmp, 'bad.zip', 'application/zip', null, true);
-
-        $response = $this->actingAs($admin)
-            ->postJson('/admin/updater/analyze', [
-                'update_file' => $file,
-            ]);
-
-        // Validation (mimes) or open-failure path should not be 200 success
-        $this->assertNotEquals(200, $response->status());
-        if ($response->status() === 422) {
-            $json = $response->json();
-            $this->assertTrue(
-                isset($json['message']) || isset($json['errors']) || ($json['status'] ?? null) === 'error'
-            );
-        }
-
-        @unlink($tmp);
-    }
-
-    public function test_updater_analyze_valid_package(): void
-    {
-        ['admin' => $admin] = $this->seedApp();
-
-        $tmpZip = sys_get_temp_dir().'/upd_test_'.uniqid().'.zip';
-        $zip = new ZipArchive();
-        $this->assertTrue($zip->open($tmpZip, ZipArchive::CREATE) === true);
-        $manifest = json_encode([
-            'version' => '2.0.1',
-            'release_date' => '2026-07-24',
-            'description' => 'Test update package',
-            'author' => 'QA',
-        ]);
-        $zip->addFromString('manifest.json', $manifest);
-        $zip->addFromString('files/README_UPDATE.md', '# updated');
-        $zip->close();
-
-        $file = new UploadedFile($tmpZip, 'update.zip', 'application/zip', null, true);
-
-        $response = $this->actingAs($admin)
-            ->post('/admin/updater/analyze', [
-                'update_file' => $file,
-            ], ['Accept' => 'application/json']);
-
-        $response->assertOk()
-            ->assertJsonPath('status', 'success')
-            ->assertJsonPath('manifest.version', '2.0.1');
-
-        $tempId = $response->json('temp_id');
-        $this->assertNotEmpty($tempId);
-
-        $exec = $this->actingAs($admin)
-            ->post('/admin/updater/execute', [
-                'temp_id' => $tempId,
-            ], ['Accept' => 'application/json']);
-
-        $exec->assertOk()->assertJsonPath('status', 'success');
-        $this->assertEquals('2.0.1', trim((string) file_get_contents(base_path('version.lock'))));
-
-        // restore version for other tests / workspace
-        file_put_contents(base_path('version.lock'), "2.0.0\n");
-        @unlink(base_path('README_UPDATE.md'));
-        @unlink($tmpZip);
-    }
-
-    public function test_database_migrate_endpoint(): void
+    public function test_zip_updater_routes_removed(): void
     {
         ['admin' => $admin] = $this->seedApp();
 
         $this->actingAs($admin)
-            ->postJson('/admin/database/migrate')
+            ->postJson('/admin/updater/analyze')
+            ->assertNotFound();
+
+        $this->actingAs($admin)
+            ->postJson('/admin/updater/execute')
+            ->assertNotFound();
+    }
+
+    public function test_database_migrate_requires_admin_password(): void
+    {
+        ['admin' => $admin] = $this->seedApp();
+
+        // Missing password
+        try {
+            $this->withoutExceptionHandling();
+            $this->actingAs($admin)->post('/admin/database/migrate', [], [
+                'Accept' => 'application/json',
+            ]);
+            $this->fail('Expected ValidationException for missing password');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->assertArrayHasKey('password', $e->errors());
+        }
+
+        // Wrong password
+        try {
+            $this->withoutExceptionHandling();
+            $this->actingAs($admin)->post('/admin/database/migrate', [
+                'password' => 'wrong-password',
+            ], ['Accept' => 'application/json']);
+            $this->fail('Expected ValidationException for wrong password');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->assertArrayHasKey('password', $e->errors());
+        }
+
+        // Correct password
+        $this->withExceptionHandling();
+        $this->actingAs($admin)
+            ->post('/admin/database/migrate', [
+                'password' => 'password',
+            ], ['Accept' => 'application/json'])
             ->assertOk()
             ->assertJsonPath('status', 'success');
     }

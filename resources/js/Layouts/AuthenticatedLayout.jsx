@@ -228,7 +228,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                             route().current('admin.updater.index') ? 'text-blue-500 font-medium' : 'text-slate-500 hover:text-white'
                                         }`}
                                     >
-                                        Update App
+                                        Migrasi Database
                                     </Link>
                                     <Link
                                         href={route('admin.backup.index')}

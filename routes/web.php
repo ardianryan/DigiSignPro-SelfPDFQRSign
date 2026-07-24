@@ -71,10 +71,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/admin/backup', [AdminBackupController::class, 'index'])->name('admin.backup.index');
         Route::post('/admin/backup', [AdminBackupController::class, 'run'])->name('admin.backup.run');
         Route::post('/admin/backup/restore', [AdminBackupController::class, 'restore'])->name('admin.backup.restore');
+        // ZIP app update deprecated — deploy via CI/CD; keep DB migrate only (password re-entry required)
         Route::post('/admin/database/migrate', [AdminDatabaseController::class, 'migrate'])->name('admin.database.migrate');
         Route::get('/admin/updater', [AdminUpdaterController::class, 'index'])->name('admin.updater.index');
-        Route::post('/admin/updater/analyze', [AdminUpdaterController::class, 'analyze'])->name('admin.updater.analyze');
-        Route::post('/admin/updater/execute', [AdminUpdaterController::class, 'execute'])->name('admin.updater.execute');
     });
 });
 
