@@ -21,7 +21,7 @@ Route::get('/', function () {
 });
 
 // Public verify route
-Route::get('/verify/{code}', [VerificationController::class, 'verify'])->name('verify');
+Route::get('/verify/{code?}', [VerificationController::class, 'verify'])->name('verify');
 
 // 2. Authenticated user routes
 Route::middleware(['auth'])->group(function () {
@@ -45,6 +45,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Tanda Tangan Bulk PDF ZIP
     Route::get('/sign/bulk', [BulkSignController::class, 'create'])->name('sign.bulk.create');
+    Route::post('/sign/preview-bulk', [BulkSignController::class, 'previewBulk'])->name('sign.bulk.preview');
     Route::post('/sign/bulk', [BulkSignController::class, 'store'])->name('sign.bulk.store');
 
     // TTE QR (Manual QR Code Signatures)
