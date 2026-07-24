@@ -34,6 +34,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'settings' => \App\Models\AppSetting::first(),
         ];
     }
 }
