@@ -6,7 +6,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import CookieConsent from './Components/CookieConsent';
 
-const appName = import.meta.env.VITE_APP_NAME || 'DigiSign Pro';
+const appName = window.appName || import.meta.env.VITE_APP_NAME || 'DigiSign Pro';
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,

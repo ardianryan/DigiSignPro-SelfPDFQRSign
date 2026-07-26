@@ -5,7 +5,14 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        @php
+            $appSettings = \App\Models\AppSetting::first();
+            $appName = $appSettings ? $appSettings->app_name : config('app.name', 'Laravel');
+        @endphp
+        <title inertia>{{ $appName }}</title>
+        <script>
+            window.appName = "{{ $appName }}";
+        </script>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
