@@ -36,10 +36,15 @@ Built with **Laravel 13** and **Inertia.js + React 19**, DigiSign Pro provides s
 
 ---
 
-## 🛠️ All-in-One PDF Suite & Editor (Zero-Server Storage)
+## 🛠️ All-in-One PDF Suite & Visual Editor (Zero-Server Storage)
 
-DigiSign Pro features a modular **Bento Grid Tool Hub** powered by an in-browser in-memory client-side engine (`pdf-lib`), guaranteeing **100% privacy** with zero disk storage and zero S3 bandwidth costs:
+DigiSign Pro features a modular **Bento Grid Tool Hub** powered by an in-browser in-memory client-side engine (`pdf-lib` & `pdf.js`), guaranteeing **100% privacy** with zero disk storage and zero S3 bandwidth costs:
 
+* ✏️ **Visual PDF Editor** (`/tools/editor`):
+  * **In-Place Text Replacement**: Click directly on any text in the PDF document to edit or replace words and sentences seamlessly with zero vertical or horizontal position shifting (*Foxit-like precision*).
+  * **Auto Font & Style Detection**: Automatically identifies font family (*Times New Roman*, *Arial/Helvetica*, *Courier*, *Calibri*, etc.), font size, bold, and italic styling straight from the PDF font dictionary.
+  * **Rich Typography Palette**: 8 built-in standard font families (Arial, Times New Roman, Courier New, Georgia, Trebuchet MS, Verdana, Calibri, Roboto) with full size (6–72px) and color customization.
+  * **Annotation & Redaction Tools**: Add custom text boxes, transparent PNG/JPG image stamps, clean whiteout redaction boxes, and freehand drawing pens.
 * 📑 **Merge PDF** (`/tools/merge`): Combine multiple PDF documents with drag-and-drop file ordering.
 * ✂️ **Split PDF** (`/tools/split`): Extract custom page ranges (`1-3, 5`) or split all pages into separate files.
 * 🔄 **Organize & Rotate** (`/tools/organize`): Visual page grid preview with 90°/180°/270° rotation, page deletion, and reordering.
