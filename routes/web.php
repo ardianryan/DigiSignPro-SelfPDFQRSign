@@ -60,6 +60,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/sign/qr-manual/create', [QrSignController::class, 'create'])->name('sign.qr.create');
     Route::post('/sign/qr-manual', [QrSignController::class, 'store'])->name('sign.qr.store');
     
+    // Legacy Route Redirects
+    Route::get('/sign/qr_list', fn() => redirect()->route('sign.qr.index'));
+    Route::get('/sign/qr_create', fn() => redirect()->route('sign.qr.create'));
+    Route::get('/sign/single.php', fn() => redirect()->route('sign.single.create'));
+    Route::get('/sign/bulk.php', fn() => redirect()->route('sign.bulk.create'));
+    Route::get('/views/history.php', fn() => redirect()->route('history.index'));
+    
     // 3. Admin-only routes
     Route::middleware(['can:admin-only'])->group(function () {
         Route::get('/admin/users', [AdminUserController::class, 'index'])->name('admin.users.index');
