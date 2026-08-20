@@ -4,6 +4,18 @@ import { useState, useRef, useEffect } from 'react';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import Swal from 'sweetalert2';
 
+// Supported Fonts Palette
+const AVAILABLE_FONTS = [
+    { id: 'Helvetica', name: 'Arial / Helvetica (Sans-Serif)', css: 'Arial, Helvetica, "Segoe UI", sans-serif', pdf: 'Helvetica' },
+    { id: 'TimesRoman', name: 'Times New Roman (Serif Resmi)', css: '"Times New Roman", Times, Georgia, serif', pdf: 'TimesRoman' },
+    { id: 'Courier', name: 'Courier New (Monospace)', css: '"Courier New", Courier, Consolas, monospace', pdf: 'Courier' },
+    { id: 'Georgia', name: 'Georgia (Serif Klasik)', css: 'Georgia, "Times New Roman", serif', pdf: 'TimesRoman' },
+    { id: 'Trebuchet', name: 'Trebuchet MS (Modern)', css: '"Trebuchet MS", "Lucida Sans Unicode", sans-serif', pdf: 'Helvetica' },
+    { id: 'Verdana', name: 'Verdana (Legible Sans)', css: 'Verdana, Geneva, sans-serif', pdf: 'Helvetica' },
+    { id: 'Calibri', name: 'Calibri / Carlito', css: 'Calibri, Carlito, "Open Sans", sans-serif', pdf: 'Helvetica' },
+    { id: 'Roboto', name: 'Roboto / Inter', css: 'Roboto, Inter, -apple-system, sans-serif', pdf: 'Helvetica' },
+];
+
 export default function VisualPdfEditor({ auth }) {
     const [file, setFile] = useState(null);
     const [pdfDocProxy, setPdfDocProxy] = useState(null);
@@ -17,13 +29,13 @@ export default function VisualPdfEditor({ auth }) {
     const [selectedAnnotationId, setSelectedAnnotationId] = useState(null);
     const [editingAnnotationId, setEditingAnnotationId] = useState(null);
 
-    // Text items extracted by PDF.js for interactive text replacement
+    // Text items extracted by PDF.js with precise typography metrics
     const [pdfTextItems, setPdfTextItems] = useState([]);
 
     // Toolbar settings
-    const [textColor, setTextColor] = useState('#0f172a');
-    const [textSize, setTextSize] = useState(14);
-    const [textFont, setTextFont] = useState('Helvetica'); // 'Helvetica', 'TimesRoman', 'Courier'
+    const [textColor, setTextColor] = useState('#000000');
+    const [textSize, setTextSize] = useState(12);
+    const [textFont, setTextFont] = useState('Helvetica');
     const [textBold, setTextBold] = useState(false);
     const [textItalic, setTextItalic] = useState(false);
     const [whiteoutColor, setWhiteoutColor] = useState('#ffffff');
@@ -55,7 +67,6 @@ export default function VisualPdfEditor({ auth }) {
         document.body.appendChild(script);
     }, []);
 
-    // Change tool helper: clears element selection when switching tools
     const switchTool = (tool) => {
         setActiveTool(tool);
         setSelectedAnnotationId(null);
@@ -106,7 +117,7 @@ export default function VisualPdfEditor({ auth }) {
         }
     };
 
-    // Render PDF page & Extract selectable text spans
+    // Render PDF page & Extract exact text bounding boxes with PDF.js font styles
     useEffect(() => {
         if (!pdfDocProxy || !canvasRef.current) return;
 
@@ -132,45 +143,56 @@ export default function VisualPdfEditor({ auth }) {
                 await renderTask.promise;
                 if (isCancelled) return;
 
-                // Extract text items with fonts and coordinates
+                // Extract text items and true font styles from PDF dictionary
                 const textContent = await page.getTextContent();
+                const styles = textContent.styles || {};
                 const items = [];
 
                 for (const item of textContent.items) {
                     if (!item.str || item.str.trim() === '') continue;
 
                     const tx = window.pdfjsLib.Util.transform(viewport.transform, item.transform);
-                    const itemFontSize = Math.sqrt((tx[0] * tx[0]) + (tx[1] * tx[1]));
+                    const itemFontSize = Math.hypot(tx[0], tx[1]);
                     const itemWidth = item.width * scale;
-                    const itemHeight = item.height ? (item.height * scale) : itemFontSize;
+                    
+                    // True font name from style registry
+                    const fontStyle = styles[item.fontName] || {};
+                    const rawFontName = (fontStyle.fontFamily || item.fontName || '').toLowerCase();
+                    const ascent = fontStyle.ascent || 0.82;
+                    
+                    // Pixel-exact top Y coordinate calculated from PDF baseline
                     const x = tx[4];
-                    const y = tx[5] - itemFontSize; // normalize baseline to top
+                    const y = tx[5] - (itemFontSize * ascent);
+                    const height = itemFontSize * 1.15;
 
-                    // Auto font detection from PDF.js fontName
+                    // Detect font family
                     let detectedFont = 'Helvetica';
-                    let isBold = false;
-                    let isItalic = false;
-                    const fontNameLower = (item.fontName || '').toLowerCase();
-
-                    if (fontNameLower.includes('times') || fontNameLower.includes('serif') || fontNameLower.includes('roman') || fontNameLower.includes('cambria')) {
+                    if (rawFontName.includes('times') || rawFontName.includes('serif') || rawFontName.includes('roman') || rawFontName.includes('cambria') || rawFontName.includes('garamond') || rawFontName.includes('minion')) {
                         detectedFont = 'TimesRoman';
-                    } else if (fontNameLower.includes('courier') || fontNameLower.includes('mono') || fontNameLower.includes('consolas')) {
+                    } else if (rawFontName.includes('georgia')) {
+                        detectedFont = 'Georgia';
+                    } else if (rawFontName.includes('courier') || rawFontName.includes('mono') || rawFontName.includes('consolas') || rawFontName.includes('typewriter')) {
                         detectedFont = 'Courier';
+                    } else if (rawFontName.includes('trebuchet')) {
+                        detectedFont = 'Trebuchet';
+                    } else if (rawFontName.includes('verdana')) {
+                        detectedFont = 'Verdana';
+                    } else if (rawFontName.includes('calibri') || rawFontName.includes('carlito')) {
+                        detectedFont = 'Calibri';
+                    } else if (rawFontName.includes('roboto') || rawFontName.includes('inter')) {
+                        detectedFont = 'Roboto';
                     }
 
-                    if (fontNameLower.includes('bold') || fontNameLower.includes('black') || fontNameLower.includes('heavy')) {
-                        isBold = true;
-                    }
-                    if (fontNameLower.includes('italic') || fontNameLower.includes('oblique')) {
-                        isItalic = true;
-                    }
+                    // Detect bold & italic
+                    const isBold = rawFontName.includes('bold') || rawFontName.includes('black') || rawFontName.includes('heavy') || rawFontName.includes('semibold') || rawFontName.includes('700') || rawFontName.includes('800') || rawFontName.includes('900');
+                    const isItalic = rawFontName.includes('italic') || rawFontName.includes('oblique') || rawFontName.includes('slanted');
 
                     items.push({
                         str: item.str,
                         x: Math.max(0, x),
                         y: Math.max(0, y),
-                        width: Math.max(12, itemWidth),
-                        height: Math.max(12, itemHeight + 2),
+                        width: Math.max(8, itemWidth),
+                        height: Math.max(10, height),
                         fontSize: Math.round(itemFontSize),
                         fontName: item.fontName,
                         detectedFont,
@@ -193,32 +215,31 @@ export default function VisualPdfEditor({ auth }) {
         };
     }, [pdfDocProxy, pageNum, scale]);
 
-    // Click on PDF Text to Edit Directly (Automatic Font Matching & Whiteout)
+    // Click on PDF Text to Edit Directly (Foxit-like Pixel-Exact In-Place Replacement)
     const handlePdfTextClick = (item, e) => {
-        // Only active when in 'edit-pdf-text' or 'select' mode
         if (activeTool !== 'edit-pdf-text' && activeTool !== 'select') return;
 
         e.stopPropagation();
         
-        // Auto sync toolbar with detected font & size
+        // Auto-match toolbar font & styles
         setTextFont(item.detectedFont);
         setTextSize(item.fontSize);
         setTextBold(item.isBold);
         setTextItalic(item.isItalic);
 
-        // 1. Create a matching whiteout patch underneath the original text
+        // 1. Precise whiteout patch covering the original text
         const whiteoutId = `rect_auto_${Date.now()}`;
         const whiteoutAnno = {
             id: whiteoutId,
             type: 'rect',
-            x: Math.max(0, item.x - 2),
+            x: Math.max(0, item.x - 1),
             y: Math.max(0, item.y - 1),
-            width: item.width + 6,
-            height: item.height + 4,
+            width: item.width + 3,
+            height: item.height + 2,
             color: '#ffffff',
         };
 
-        // 2. Create the editable text annotation with auto-matched font and size
+        // 2. Editable text annotation with exact position, zero displacement
         const textId = `text_edit_${Date.now() + 1}`;
         const textAnno = {
             id: textId,
@@ -231,8 +252,8 @@ export default function VisualPdfEditor({ auth }) {
             font: item.detectedFont,
             isBold: item.isBold,
             isItalic: item.isItalic,
-            width: Math.max(item.width + 24, 100),
-            height: Math.max(item.height + 6, 24),
+            width: Math.max(item.width + 10, 80),
+            height: item.height,
         };
 
         setAnnotations(prev => ({
@@ -244,7 +265,7 @@ export default function VisualPdfEditor({ auth }) {
         setEditingAnnotationId(textId);
     };
 
-    // Click anywhere on workspace to add new text, whiteout, or deselect
+    // Click on empty workspace area
     const handleWorkspaceClick = (e) => {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.closest('.annotation-item') || e.target.closest('.pdf-text-span')) {
             return;
@@ -268,8 +289,8 @@ export default function VisualPdfEditor({ auth }) {
                 font: textFont,
                 isBold: textBold,
                 isItalic: textItalic,
-                width: 220,
-                height: Math.max(30, textSize + 14),
+                width: 200,
+                height: Math.max(24, textSize + 8),
             };
             addAnnotation(newAnno);
             setSelectedAnnotationId(newId);
@@ -279,10 +300,10 @@ export default function VisualPdfEditor({ auth }) {
             const newAnno = {
                 id: newId,
                 type: 'rect',
-                x: clickX - 60,
-                y: clickY - 14,
-                width: 140,
-                height: 28,
+                x: clickX - 50,
+                y: clickY - 12,
+                width: 120,
+                height: 24,
                 color: whiteoutColor,
             };
             addAnnotation(newAnno);
@@ -342,7 +363,7 @@ export default function VisualPdfEditor({ auth }) {
 
     // Element Dragging - STRICTLY only allowed when activeTool === 'select'
     const handleElementMouseDown = (e, anno) => {
-        if (activeTool !== 'select') return; // When in draw, text, whiteout, etc., DO NOT allow dragging!
+        if (activeTool !== 'select') return;
         if (editingAnnotationId === anno.id) return;
         
         e.stopPropagation();
@@ -427,6 +448,12 @@ export default function VisualPdfEditor({ auth }) {
         setEditingAnnotationId(null);
     };
 
+    // Get CSS font family string
+    const getCssFontFamily = (fontId) => {
+        const found = AVAILABLE_FONTS.find(f => f.id === fontId);
+        return found ? found.css : 'Arial, Helvetica, sans-serif';
+    };
+
     // Export PDF with pdf-lib
     const handleExport = async () => {
         if (!file) return;
@@ -467,15 +494,19 @@ export default function VisualPdfEditor({ auth }) {
                     if (anno.type === 'text') {
                         const pdfX = anno.x * ratioX;
                         const fontSizeInPdf = anno.size * ratioY;
-                        const pdfY = pdfHeight - (anno.y * ratioY) - fontSizeInPdf;
+                        // Calculate exact Y baseline in PDF coordinate system
+                        const pdfY = pdfHeight - (anno.y * ratioY) - (fontSizeInPdf * 0.82);
 
                         let selectedFont = fontHelvetica;
-                        if (anno.font === 'TimesRoman') {
+                        const fontObj = AVAILABLE_FONTS.find(f => f.id === anno.font);
+                        const pdfFamily = fontObj ? fontObj.pdf : 'Helvetica';
+
+                        if (pdfFamily === 'TimesRoman') {
                             if (anno.isBold && anno.isItalic) selectedFont = fontTimesBoldItalic;
                             else if (anno.isBold) selectedFont = fontTimesBold;
                             else if (anno.isItalic) selectedFont = fontTimesItalic;
                             else selectedFont = fontTimes;
-                        } else if (anno.font === 'Courier') {
+                        } else if (pdfFamily === 'Courier') {
                             selectedFont = anno.isBold ? fontCourierBold : fontCourier;
                         } else {
                             if (anno.isBold && anno.isItalic) selectedFont = fontHelveticaBoldOblique;
@@ -493,7 +524,7 @@ export default function VisualPdfEditor({ auth }) {
                             if (!lineText) return;
                             pdfPage.drawText(lineText, {
                                 x: pdfX,
-                                y: pdfY - (lIdx * fontSizeInPdf * 1.2),
+                                y: pdfY - (lIdx * fontSizeInPdf * 1.15),
                                 size: fontSizeInPdf,
                                 font: selectedFont,
                                 color: rgb(r || 0, g || 0, b || 0),
@@ -630,7 +661,7 @@ export default function VisualPdfEditor({ auth }) {
                                     {isDraggingFile ? 'Lepaskan Berkas PDF di Sini' : 'Pilih atau Tarik Berkas PDF ke Sini'}
                                 </h3>
                                 <p className="text-xs text-slate-500 mt-1 max-w-md">
-                                    Klik langsung pada teks dokumen untuk mengubahnya dengan otomatis penyesuaian font, atau tambahkan teks baru di posisi mana pun.
+                                    Edit teks PDF dengan presisi tanpa pergeseran posisi, otomatis penyesuaian font, atau tambahkan teks baru di posisi mana pun.
                                 </p>
                                 <input type="file" accept="application/pdf" onChange={handleFileChange} className="hidden" />
                             </label>
@@ -660,7 +691,7 @@ export default function VisualPdfEditor({ auth }) {
                                         className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors ${
                                             activeTool === 'edit-pdf-text' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
                                         }`}
-                                        title="Klik langsung pada teks dokumen untuk menggantinya"
+                                        title="Klik langsung pada teks dokumen untuk menggantinya secara presisi"
                                     >
                                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -805,9 +836,9 @@ export default function VisualPdfEditor({ auth }) {
                                             }}
                                             className="border border-slate-300 dark:border-gray-600 rounded-md px-2 py-1 text-xs dark:bg-gray-700 dark:text-white"
                                         >
-                                            <option value="Helvetica">Helvetica (Arial / Sans-Serif)</option>
-                                            <option value="TimesRoman">Times New Roman (Serif Resmi)</option>
-                                            <option value="Courier">Courier (Monospace)</option>
+                                            {AVAILABLE_FONTS.map(f => (
+                                                <option key={f.id} value={f.id}>{f.name}</option>
+                                            ))}
                                         </select>
                                     </div>
 
@@ -871,8 +902,8 @@ export default function VisualPdfEditor({ auth }) {
                                 </div>
 
                                 <div className="text-[11px] text-slate-500 font-medium">
-                                    {activeTool === 'select' && 'Mode Pilih: Klik elemen untuk menggeser / mengubah ukuran.'}
-                                    {activeTool === 'edit-pdf-text' && 'Mode Ganti Teks: Klik teks pada dokumen untuk menggantinya.'}
+                                    {activeTool === 'select' && 'Mode Pilih: Klik elemen untuk memindahkan posisinya.'}
+                                    {activeTool === 'edit-pdf-text' && 'Mode Ganti Teks: Klik teks pada dokumen untuk mengedit langsung di tempat (in-place).'}
                                     {activeTool === 'text' && 'Mode Ketik: Klik pada dokumen untuk mengetik teks baru.'}
                                     {activeTool === 'draw' && 'Mode Pena: Gambar atau coret bebas pada dokumen.'}
                                     {activeTool === 'whiteout' && 'Mode Tutup: Klik dokumen untuk menutup bagian yang diinginkan.'}
@@ -898,7 +929,6 @@ export default function VisualPdfEditor({ auth }) {
                                     <canvas ref={canvasRef} className="block pointer-events-none" />
 
                                     {/* 2. PDF Native Selectable / Clickable Text Spans (Middle, z-20) */}
-                                    {/* Only receives pointer events when in 'edit-pdf-text' or 'select' mode! */}
                                     <div className="absolute inset-0 z-20 pointer-events-none">
                                         {(activeTool === 'edit-pdf-text' || activeTool === 'select') && pdfTextItems.map((item, idx) => (
                                             <div
@@ -925,8 +955,6 @@ export default function VisualPdfEditor({ auth }) {
                                         {currentPageAnnos.map((anno) => {
                                             const isSelected = selectedAnnotationId === anno.id;
                                             const isEditing = editingAnnotationId === anno.id;
-
-                                            // Pointer events on annotations are ONLY active in 'select' mode (or when currently editing text)
                                             const isPointerActive = activeTool === 'select' || isEditing;
 
                                             if (anno.type === 'text') {
@@ -950,23 +978,30 @@ export default function VisualPdfEditor({ auth }) {
                                                     >
                                                         {isEditing ? (
                                                             <div className="relative pointer-events-auto">
-                                                                <textarea
+                                                                <input
                                                                     autoFocus
+                                                                    type="text"
                                                                     value={anno.text}
                                                                     onChange={(e) => updateAnnotation(anno.id, { text: e.target.value })}
                                                                     onBlur={() => setEditingAnnotationId(null)}
+                                                                    onKeyDown={(e) => {
+                                                                        if (e.key === 'Enter' || e.key === 'Escape') {
+                                                                            setEditingAnnotationId(null);
+                                                                        }
+                                                                    }}
                                                                     style={{
                                                                         color: anno.color,
                                                                         fontSize: `${anno.size}px`,
-                                                                        fontFamily: anno.font === 'TimesRoman' ? 'Times New Roman, serif' : anno.font === 'Courier' ? 'Courier, monospace' : 'Helvetica, Arial, sans-serif',
+                                                                        fontFamily: getCssFontFamily(anno.font),
                                                                         fontWeight: anno.isBold ? 'bold' : 'normal',
                                                                         fontStyle: anno.isItalic ? 'italic' : 'normal',
-                                                                        lineHeight: '1.2',
-                                                                        minWidth: '120px',
-                                                                        minHeight: '28px',
+                                                                        lineHeight: '1',
+                                                                        padding: '0 2px',
+                                                                        margin: '0',
+                                                                        minWidth: `${Math.max(60, anno.width || 60)}px`,
+                                                                        height: `${anno.height || (anno.size * 1.2)}px`,
                                                                     }}
-                                                                    className="p-1 border-2 border-blue-500 rounded bg-white text-slate-900 shadow-xl focus:outline-none resize"
-                                                                    rows={Math.max(1, (anno.text.match(/\n/g) || []).length + 1)}
+                                                                    className="border border-blue-500 bg-white text-slate-900 shadow-md focus:outline-none"
                                                                 />
                                                                 <button
                                                                     type="button"
@@ -984,13 +1019,15 @@ export default function VisualPdfEditor({ auth }) {
                                                                 style={{
                                                                     color: anno.color,
                                                                     fontSize: `${anno.size}px`,
-                                                                    fontFamily: anno.font === 'TimesRoman' ? 'Times New Roman, serif' : anno.font === 'Courier' ? 'Courier, monospace' : 'Helvetica, Arial, sans-serif',
+                                                                    fontFamily: getCssFontFamily(anno.font),
                                                                     fontWeight: anno.isBold ? 'bold' : 'normal',
                                                                     fontStyle: anno.isItalic ? 'italic' : 'normal',
-                                                                    lineHeight: '1.2',
-                                                                    whiteSpace: 'pre-wrap',
+                                                                    lineHeight: '1',
+                                                                    padding: '0',
+                                                                    margin: '0',
+                                                                    whiteSpace: 'nowrap',
                                                                 }}
-                                                                className={`px-1.5 py-0.5 rounded select-none transition-all ${
+                                                                className={`select-none transition-all ${
                                                                     activeTool === 'select' ? 'cursor-move' : ''
                                                                 } ${
                                                                     isSelected && activeTool === 'select' ? 'ring-2 ring-blue-500 bg-blue-50/70 shadow-sm' : ''
