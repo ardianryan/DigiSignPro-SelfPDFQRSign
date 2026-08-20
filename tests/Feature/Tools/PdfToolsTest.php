@@ -21,6 +21,7 @@ test('authenticated user can view individual tool pages', function () {
         '/tools/watermark',
         '/tools/page-number',
         '/tools/protect',
+        '/tools/editor',
     ];
 
     foreach ($routes as $route) {

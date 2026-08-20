@@ -55,6 +55,20 @@ export default function Dashboard({ auth, stats = {}, recentSignatures = [], adm
 
     const pdfTools = [
         {
+            id: 'editor',
+            title: 'Visual PDF Editor',
+            category: 'editor',
+            categoryLabel: 'Editor Visual',
+            description: 'Ubah teks, tempel stempel gambar/tanda tangan, hapus/sensor teks (whiteout), dan coretan bebas.',
+            iconBg: 'from-blue-600 to-cyan-500',
+            badge: 'Fitur Utama 🎨',
+            badgeColor: 'bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200 font-extrabold',
+            href: route('tools.editor'),
+            icon: (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+            )
+        },
+        {
             id: 'merge',
             title: 'Merge PDF',
             category: 'organize',

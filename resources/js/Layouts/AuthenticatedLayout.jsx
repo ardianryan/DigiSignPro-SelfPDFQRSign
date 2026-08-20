@@ -260,6 +260,15 @@ export default function AuthenticatedLayout({ header, children }) {
                                     Page Numbering
                                 </Link>
                                 <Link
+                                    href={route('tools.editor')}
+                                    onClick={() => setSidebarOpen(false)}
+                                    className={`block py-2 text-sm transition-colors ${
+                                        route().current('tools.editor') ? 'text-purple-400 font-bold' : 'text-slate-500 hover:text-white'
+                                    }`}
+                                >
+                                    Visual PDF Editor 🎨
+                                </Link>
+                                <Link
                                     href={route('tools.protect')}
                                     onClick={() => setSidebarOpen(false)}
                                     className={`block py-2 text-sm transition-colors ${

@@ -75,12 +75,20 @@ class PdfToolController extends Controller
     }
 
     /**
+     * Visual Canvas PDF Editor workspace.
+     */
+    public function editor(): Response
+    {
+        return Inertia::render('Tools/Editor');
+    }
+
+    /**
      * Track usage telemetry for PDF Tools.
      */
     public function trackUsage(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'tool' => 'required|string|in:merge,split,organize,image_to_pdf,watermark,page_number,protect',
+            'tool' => 'required|string|in:merge,split,organize,image_to_pdf,watermark,page_number,protect,editor',
             'files_count' => 'nullable|integer|min:1|max:500',
         ]);
 

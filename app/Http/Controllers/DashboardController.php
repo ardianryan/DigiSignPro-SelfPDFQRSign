@@ -53,6 +53,7 @@ class DashboardController extends Controller
                 'watermark' => ['name' => 'Watermark PDF', 'color' => 'cyan'],
                 'page_number' => ['name' => 'Page Numbering', 'color' => 'violet'],
                 'protect' => ['name' => 'Protect & Encrypt', 'color' => 'rose'],
+                'editor' => ['name' => 'Visual PDF Editor', 'color' => 'blue'],
             ];
 
             $usageByTool = ToolUsage::selectRaw('tool_name, count(*) as usage_count, sum(files_count) as total_files')

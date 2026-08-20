@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('tool_usages', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->unsignedBigInteger('user_id')->nullable()->index();
             $table->string('tool_name', 50)->index();
             $table->unsignedInteger('files_count')->default(1);
             $table->timestamps();
