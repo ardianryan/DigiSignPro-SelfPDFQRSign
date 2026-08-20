@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tool_usages', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('user_id')->nullable()->index();
-            $table->string('tool_name', 50)->index();
-            $table->unsignedInteger('files_count')->default(1);
-            $table->timestamps();
-        });
+        if (! Schema::hasTable('tool_usages')) {
+            Schema::create('tool_usages', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('user_id')->nullable()->index();
+                $table->string('tool_name', 50)->index();
+                $table->unsignedInteger('files_count')->default(1);
+                $table->timestamps();
+            });
+        }
     }
 
     /**
