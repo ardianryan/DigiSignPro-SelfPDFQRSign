@@ -13,6 +13,7 @@ export default function AuthenticatedLayout({ header, children }) {
         const initial = [];
         if (path.startsWith('/admin/users') || path === '/history') initial.push('management');
         if (path.startsWith('/sign/')) initial.push('services');
+        if (path.startsWith('/tools')) initial.push('pdftools');
         if (path.startsWith('/admin/settings') || path.startsWith('/admin/storage') || path.startsWith('/admin/backup') || path.startsWith('/admin/updater')) initial.push('system');
         if (path === '/profile') initial.push('account');
         return initial;
@@ -171,6 +172,110 @@ export default function AuthenticatedLayout({ header, children }) {
                                     }`}
                                 >
                                     TTE QR (Manual)
+                                </Link>
+                            </div>
+                        )}
+                    </li>
+
+                    {/* Group: PDF Tools & Suite */}
+                    <li className="space-y-1">
+                        <button
+                            onClick={() => toggleMenu('pdftools')}
+                            className={`w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors ${
+                                isCurrent(['tools.index', 'tools.merge', 'tools.split', 'tools.organize', 'tools.image_to_pdf', 'tools.watermark', 'tools.page_number', 'tools.protect']) ? 'text-white bg-slate-800' : 'text-slate-400 hover:text-white'
+                            }`}
+                        >
+                            <div className="flex items-center">
+                                <svg className="w-5 h-5 mr-3 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                </svg>
+                                <span className="text-sm font-medium">PDF Tools Suite</span>
+                            </div>
+                            <div className="flex items-center">
+                                <span className="text-[10px] bg-purple-900/60 text-purple-300 font-semibold px-1.5 py-0.5 rounded border border-purple-700/50 mr-2">New</span>
+                                <svg
+                                    className={`w-4 h-4 transition-transform duration-200 ${openMenus.includes('pdftools') ? 'rotate-180' : ''}`}
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        {openMenus.includes('pdftools') && (
+                            <div className="pl-12 space-y-1">
+                                <Link
+                                    href={route('tools.index')}
+                                    onClick={() => setSidebarOpen(false)}
+                                    className={`block py-2 text-sm transition-colors ${
+                                        route().current('tools.index') ? 'text-purple-400 font-medium' : 'text-slate-500 hover:text-white'
+                                    }`}
+                                >
+                                    Bento Tool Hub
+                                </Link>
+                                <Link
+                                    href={route('tools.merge')}
+                                    onClick={() => setSidebarOpen(false)}
+                                    className={`block py-2 text-sm transition-colors ${
+                                        route().current('tools.merge') ? 'text-purple-400 font-medium' : 'text-slate-500 hover:text-white'
+                                    }`}
+                                >
+                                    Merge (Gabung PDF)
+                                </Link>
+                                <Link
+                                    href={route('tools.split')}
+                                    onClick={() => setSidebarOpen(false)}
+                                    className={`block py-2 text-sm transition-colors ${
+                                        route().current('tools.split') ? 'text-purple-400 font-medium' : 'text-slate-500 hover:text-white'
+                                    }`}
+                                >
+                                    Split (Pisah PDF)
+                                </Link>
+                                <Link
+                                    href={route('tools.organize')}
+                                    onClick={() => setSidebarOpen(false)}
+                                    className={`block py-2 text-sm transition-colors ${
+                                        route().current('tools.organize') ? 'text-purple-400 font-medium' : 'text-slate-500 hover:text-white'
+                                    }`}
+                                >
+                                    Organize & Rotate
+                                </Link>
+                                <Link
+                                    href={route('tools.image_to_pdf')}
+                                    onClick={() => setSidebarOpen(false)}
+                                    className={`block py-2 text-sm transition-colors ${
+                                        route().current('tools.image_to_pdf') ? 'text-purple-400 font-medium' : 'text-slate-500 hover:text-white'
+                                    }`}
+                                >
+                                    Image to PDF
+                                </Link>
+                                <Link
+                                    href={route('tools.watermark')}
+                                    onClick={() => setSidebarOpen(false)}
+                                    className={`block py-2 text-sm transition-colors ${
+                                        route().current('tools.watermark') ? 'text-purple-400 font-medium' : 'text-slate-500 hover:text-white'
+                                    }`}
+                                >
+                                    Watermark PDF
+                                </Link>
+                                <Link
+                                    href={route('tools.page_number')}
+                                    onClick={() => setSidebarOpen(false)}
+                                    className={`block py-2 text-sm transition-colors ${
+                                        route().current('tools.page_number') ? 'text-purple-400 font-medium' : 'text-slate-500 hover:text-white'
+                                    }`}
+                                >
+                                    Page Numbering
+                                </Link>
+                                <Link
+                                    href={route('tools.protect')}
+                                    onClick={() => setSidebarOpen(false)}
+                                    className={`block py-2 text-sm transition-colors ${
+                                        route().current('tools.protect') ? 'text-purple-400 font-medium' : 'text-slate-500 hover:text-white'
+                                    }`}
+                                >
+                                    Protect & Encrypt
                                 </Link>
                             </div>
                         )}

@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\ApiDocsController;
 use App\Http\Controllers\ApiKeyController;
 use App\Http\Controllers\BulkSignController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PdfToolController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QrSignController;
 use App\Http\Controllers\SignatureHistoryController;
@@ -65,6 +66,18 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/sign/single.php', fn () => redirect()->route('sign.single.create'));
     Route::get('/sign/bulk.php', fn () => redirect()->route('sign.bulk.create'));
     Route::get('/views/history.php', fn () => redirect()->route('history.index'));
+
+    // 3. PDF Tools & Suite (Zero-Server In-Memory Processing)
+    Route::prefix('tools')->name('tools.')->group(function () {
+        Route::get('/', [PdfToolController::class, 'index'])->name('index');
+        Route::get('/merge', [PdfToolController::class, 'merge'])->name('merge');
+        Route::get('/split', [PdfToolController::class, 'split'])->name('split');
+        Route::get('/organize', [PdfToolController::class, 'organize'])->name('organize');
+        Route::get('/image-to-pdf', [PdfToolController::class, 'imageToPdf'])->name('image_to_pdf');
+        Route::get('/watermark', [PdfToolController::class, 'watermark'])->name('watermark');
+        Route::get('/page-number', [PdfToolController::class, 'pageNumber'])->name('page_number');
+        Route::get('/protect', [PdfToolController::class, 'protect'])->name('protect');
+    });
 
     // 3. Admin-only routes
     Route::middleware(['can:admin-only'])->group(function () {

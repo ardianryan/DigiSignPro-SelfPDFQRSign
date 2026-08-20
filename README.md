@@ -9,12 +9,13 @@
 [![Inertia.js](https://img.shields.io/badge/Inertia.js-2.x-9553E9?style=for-the-badge&logo=inertia&logoColor=white)](https://inertiajs.com)
 [![PHP 8.3+](https://img.shields.io/badge/PHP-8.3%2B-777BB4?style=for-the-badge&logo=php&logoColor=white)](https://php.net)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.x-06B6D4?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
-[![Tests Passing](https://img.shields.io/badge/Pest%20Tests-63%20Passed-22C55E?style=for-the-badge&logo=pest&logoColor=white)](tests)
+[![Tests Passing](https://img.shields.io/badge/Pest%20Tests-66%20Passed-22C55E?style=for-the-badge&logo=pest&logoColor=white)](tests)
 [![License MIT](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 [![Security Hardened](https://img.shields.io/badge/Security-OWASP%20Hardened-F59E0B?style=for-the-badge&logo=security&logoColor=white)](SECURITY.md)
 
 <p align="center">
   <a href="#-key-features">Key Features</a> •
+  <a href="#-all-in-one-pdf-suite--editor">PDF Suite</a> •
   <a href="#-architecture--tech-stack">Tech Stack</a> •
   <a href="#-installation--setup">Quick Start</a> •
   <a href="#-rest-api-reference">REST API</a> •
@@ -28,9 +29,23 @@
 
 ## 📌 Overview
 
-**DigiSign Pro** is an open-source, production-ready Electronic Signature (*Tanda Tangan Elektronik / TTE*) system designed for organizations, enterprises, and developers who need complete ownership over their documents and cryptographic verification trails.
+**DigiSign Pro** is an open-source, production-ready Electronic Signature (*Tanda Tangan Elektronik / TTE*) & **All-in-One PDF Suite & Editor** designed for organizations, enterprises, and developers who need complete ownership over their documents, cryptographic verification trails, and zero-server-load PDF manipulation.
 
-Built with **Laravel 13** and **Inertia.js + React**, DigiSign Pro provides seamless drag-and-drop QR placement, bulk document processing, password-protected PDF encryption, cloud object storage synchronization, and a developer-friendly REST API.
+Built with **Laravel 13** and **Inertia.js + React 19**, DigiSign Pro provides seamless drag-and-drop QR placement, bulk document processing, password-protected PDF encryption, cloud object storage synchronization, client-side PDF editing tools (Bento Grid Hub), and a developer-friendly REST API.
+
+---
+
+## 🛠️ All-in-One PDF Suite & Editor (Zero-Server Storage)
+
+DigiSign Pro features a modular **Bento Grid Tool Hub** powered by an in-browser in-memory client-side engine (`pdf-lib`), guaranteeing **100% privacy** with zero disk storage and zero S3 bandwidth costs:
+
+* 📑 **Merge PDF** (`/tools/merge`): Combine multiple PDF documents with drag-and-drop file ordering.
+* ✂️ **Split PDF** (`/tools/split`): Extract custom page ranges (`1-3, 5`) or split all pages into separate files.
+* 🔄 **Organize & Rotate** (`/tools/organize`): Visual page grid preview with 90°/180°/270° rotation, page deletion, and reordering.
+* 🖼️ **Image to PDF** (`/tools/image-to-pdf`): Convert JPG, PNG, and WebP images to standardized PDF with custom paper sizes (A4, Letter, Fit) and orientations.
+* 💧 **Watermark PDF** (`/tools/watermark`): Stamp diagonal/horizontal text or logos with opacity, rotation angle, and color controls.
+* 🔢 **Page Numbering** (`/tools/page-number`): Automatically insert header/footer page numbering in various formats (`Page X of Y`, `- X -`).
+* 🔒 **Protect & Encrypt** (`/tools/protect`): Encrypt PDFs with custom security passphrases.
 
 ---
 
