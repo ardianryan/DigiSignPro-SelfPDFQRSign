@@ -12,7 +12,7 @@ export default function VisualPdfEditor({ auth }) {
     const [scale, setScale] = useState(1.25);
     const [activeTool, setActiveTool] = useState('select'); // 'select', 'edit-pdf-text', 'text', 'image', 'whiteout', 'draw'
     
-    // Annotations per page: { [pageNum]: [ { id, type, x, y, width, height, text, color, size, font, isBold, isItalic, bg } ] }
+    // Annotations per page: { [pageNum]: [ { id, type, x, y, width, height, text, color, size, font, isBold, isItalic } ] }
     const [annotations, setAnnotations] = useState({});
     const [selectedAnnotationId, setSelectedAnnotationId] = useState(null);
     const [editingAnnotationId, setEditingAnnotationId] = useState(null);
@@ -38,7 +38,7 @@ export default function VisualPdfEditor({ auth }) {
     const [isProcessing, setIsProcessing] = useState(false);
     const [isDraggingFile, setIsDraggingFile] = useState(false);
 
-    // Dragging element state
+    // Dragging element state (strictly only active when activeTool === 'select')
     const [draggingElementId, setDraggingElementId] = useState(null);
     const dragStartPos = useRef({ x: 0, y: 0 });
     const elementStartPos = useRef({ x: 0, y: 0 });
@@ -54,6 +54,13 @@ export default function VisualPdfEditor({ auth }) {
         };
         document.body.appendChild(script);
     }, []);
+
+    // Change tool helper: clears element selection when switching tools
+    const switchTool = (tool) => {
+        setActiveTool(tool);
+        setSelectedAnnotationId(null);
+        setEditingAnnotationId(null);
+    };
 
     // Load PDF
     const processPdfFile = async (selected) => {
@@ -188,6 +195,9 @@ export default function VisualPdfEditor({ auth }) {
 
     // Click on PDF Text to Edit Directly (Automatic Font Matching & Whiteout)
     const handlePdfTextClick = (item, e) => {
+        // Only active when in 'edit-pdf-text' or 'select' mode
+        if (activeTool !== 'edit-pdf-text' && activeTool !== 'select') return;
+
         e.stopPropagation();
         
         // Auto sync toolbar with detected font & size
@@ -232,7 +242,6 @@ export default function VisualPdfEditor({ auth }) {
 
         setSelectedAnnotationId(textId);
         setEditingAnnotationId(textId);
-        setActiveTool('select');
     };
 
     // Click anywhere on workspace to add new text, whiteout, or deselect
@@ -265,7 +274,6 @@ export default function VisualPdfEditor({ auth }) {
             addAnnotation(newAnno);
             setSelectedAnnotationId(newId);
             setEditingAnnotationId(newId);
-            setActiveTool('select');
         } else if (activeTool === 'whiteout') {
             const newId = `rect_${Date.now()}`;
             const newAnno = {
@@ -279,7 +287,6 @@ export default function VisualPdfEditor({ auth }) {
             };
             addAnnotation(newAnno);
             setSelectedAnnotationId(newId);
-            setActiveTool('select');
         } else {
             setEditingAnnotationId(null);
             setSelectedAnnotationId(null);
@@ -326,7 +333,6 @@ export default function VisualPdfEditor({ auth }) {
                 };
                 addAnnotation(newAnno);
                 setSelectedAnnotationId(newId);
-                setActiveTool('select');
             };
             img.src = event.target.result;
         };
@@ -334,11 +340,12 @@ export default function VisualPdfEditor({ auth }) {
         e.target.value = '';
     };
 
-    // Element Dragging
+    // Element Dragging - STRICTLY only allowed when activeTool === 'select'
     const handleElementMouseDown = (e, anno) => {
+        if (activeTool !== 'select') return; // When in draw, text, whiteout, etc., DO NOT allow dragging!
         if (editingAnnotationId === anno.id) return;
-        e.stopPropagation();
         
+        e.stopPropagation();
         setSelectedAnnotationId(anno.id);
         setDraggingElementId(anno.id);
         dragStartPos.current = { x: e.clientX, y: e.clientY };
@@ -347,7 +354,7 @@ export default function VisualPdfEditor({ auth }) {
 
     useEffect(() => {
         const handleMouseMove = (e) => {
-            if (!draggingElementId) return;
+            if (!draggingElementId || activeTool !== 'select') return;
 
             const dx = e.clientX - dragStartPos.current.x;
             const dy = e.clientY - dragStartPos.current.y;
@@ -371,9 +378,9 @@ export default function VisualPdfEditor({ auth }) {
             window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('mouseup', handleMouseUp);
         };
-    }, [draggingElementId, pageNum]);
+    }, [draggingElementId, activeTool, pageNum]);
 
-    // Freehand Drawing
+    // Freehand Drawing Handlers
     const startDrawing = (e) => {
         if (activeTool !== 'draw' || !workspaceRef.current) return;
         const rect = workspaceRef.current.getBoundingClientRect();
@@ -636,9 +643,9 @@ export default function VisualPdfEditor({ auth }) {
                                 <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 dark:bg-gray-700 p-1 rounded-lg">
                                     <button
                                         type="button"
-                                        onClick={() => { setActiveTool('select'); setEditingAnnotationId(null); }}
+                                        onClick={() => switchTool('select')}
                                         className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors ${
-                                            activeTool === 'select' ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
+                                            activeTool === 'select' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
                                         }`}
                                     >
                                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -649,7 +656,7 @@ export default function VisualPdfEditor({ auth }) {
 
                                     <button
                                         type="button"
-                                        onClick={() => { setActiveTool('edit-pdf-text'); setEditingAnnotationId(null); }}
+                                        onClick={() => switchTool('edit-pdf-text')}
                                         className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors ${
                                             activeTool === 'edit-pdf-text' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
                                         }`}
@@ -663,7 +670,7 @@ export default function VisualPdfEditor({ auth }) {
 
                                     <button
                                         type="button"
-                                        onClick={() => { setActiveTool('text'); setEditingAnnotationId(null); }}
+                                        onClick={() => switchTool('text')}
                                         className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors ${
                                             activeTool === 'text' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
                                         }`}
@@ -687,7 +694,7 @@ export default function VisualPdfEditor({ auth }) {
 
                                     <button
                                         type="button"
-                                        onClick={() => { setActiveTool('whiteout'); setEditingAnnotationId(null); }}
+                                        onClick={() => switchTool('whiteout')}
                                         className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors ${
                                             activeTool === 'whiteout' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
                                         }`}
@@ -700,7 +707,7 @@ export default function VisualPdfEditor({ auth }) {
 
                                     <button
                                         type="button"
-                                        onClick={() => { setActiveTool('draw'); setEditingAnnotationId(null); }}
+                                        onClick={() => switchTool('draw')}
                                         className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors ${
                                             activeTool === 'draw' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
                                         }`}
@@ -767,7 +774,7 @@ export default function VisualPdfEditor({ auth }) {
                                             onClick={deleteSelectedAnnotation}
                                             className="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 text-xs font-medium border border-red-200"
                                         >
-                                            Hapus
+                                            Hapus Elemen
                                         </button>
                                     )}
 
@@ -785,7 +792,7 @@ export default function VisualPdfEditor({ auth }) {
                                 </div>
                             </div>
 
-                            {/* Secondary Formatting Bar with Automatic Detection */}
+                            {/* Secondary Formatting Bar */}
                             <div className="bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 p-2.5 rounded-xl flex flex-wrap items-center justify-between gap-3 text-xs">
                                 <div className="flex flex-wrap items-center gap-3">
                                     <div className="flex items-center gap-1.5">
@@ -864,7 +871,11 @@ export default function VisualPdfEditor({ auth }) {
                                 </div>
 
                                 <div className="text-[11px] text-slate-500 font-medium">
-                                    💡 Tip: Klik langsung pada teks dokumen untuk mengedit kata/kalimat dengan font yang otomatis disesuaikan.
+                                    {activeTool === 'select' && 'Mode Pilih: Klik elemen untuk menggeser / mengubah ukuran.'}
+                                    {activeTool === 'edit-pdf-text' && 'Mode Ganti Teks: Klik teks pada dokumen untuk menggantinya.'}
+                                    {activeTool === 'text' && 'Mode Ketik: Klik pada dokumen untuk mengetik teks baru.'}
+                                    {activeTool === 'draw' && 'Mode Pena: Gambar atau coret bebas pada dokumen.'}
+                                    {activeTool === 'whiteout' && 'Mode Tutup: Klik dokumen untuk menutup bagian yang diinginkan.'}
                                 </div>
                             </div>
 
@@ -887,8 +898,9 @@ export default function VisualPdfEditor({ auth }) {
                                     <canvas ref={canvasRef} className="block pointer-events-none" />
 
                                     {/* 2. PDF Native Selectable / Clickable Text Spans (Middle, z-20) */}
+                                    {/* Only receives pointer events when in 'edit-pdf-text' or 'select' mode! */}
                                     <div className="absolute inset-0 z-20 pointer-events-none">
-                                        {pdfTextItems.map((item, idx) => (
+                                        {(activeTool === 'edit-pdf-text' || activeTool === 'select') && pdfTextItems.map((item, idx) => (
                                             <div
                                                 key={`pdf_text_${idx}`}
                                                 onClick={(e) => handlePdfTextClick(item, e)}
@@ -901,7 +913,7 @@ export default function VisualPdfEditor({ auth }) {
                                                     fontSize: `${item.fontSize}px`,
                                                     lineHeight: `${item.height}px`,
                                                 }}
-                                                title={`Klik untuk edit: "${item.str}" (Font: ${item.detectedFont})`}
+                                                title={`Klik untuk ganti teks: "${item.str}" (Font: ${item.detectedFont})`}
                                             >
                                                 {item.str}
                                             </div>
@@ -914,13 +926,17 @@ export default function VisualPdfEditor({ auth }) {
                                             const isSelected = selectedAnnotationId === anno.id;
                                             const isEditing = editingAnnotationId === anno.id;
 
+                                            // Pointer events on annotations are ONLY active in 'select' mode (or when currently editing text)
+                                            const isPointerActive = activeTool === 'select' || isEditing;
+
                                             if (anno.type === 'text') {
                                                 return (
                                                     <div
                                                         key={anno.id}
-                                                        className="annotation-item pointer-events-auto"
+                                                        className={`annotation-item ${isPointerActive ? 'pointer-events-auto' : 'pointer-events-none'}`}
                                                         onMouseDown={(e) => handleElementMouseDown(e, anno)}
                                                         onDoubleClick={(e) => {
+                                                            if (activeTool !== 'select' && activeTool !== 'edit-pdf-text') return;
                                                             e.stopPropagation();
                                                             setEditingAnnotationId(anno.id);
                                                             setSelectedAnnotationId(anno.id);
@@ -933,7 +949,7 @@ export default function VisualPdfEditor({ auth }) {
                                                         }}
                                                     >
                                                         {isEditing ? (
-                                                            <div className="relative">
+                                                            <div className="relative pointer-events-auto">
                                                                 <textarea
                                                                     autoFocus
                                                                     value={anno.text}
@@ -974,8 +990,10 @@ export default function VisualPdfEditor({ auth }) {
                                                                     lineHeight: '1.2',
                                                                     whiteSpace: 'pre-wrap',
                                                                 }}
-                                                                className={`px-1.5 py-0.5 rounded cursor-move select-none transition-all ${
-                                                                    isSelected ? 'ring-2 ring-blue-500 bg-blue-50/70 shadow-sm' : 'hover:ring-1 hover:ring-slate-400'
+                                                                className={`px-1.5 py-0.5 rounded select-none transition-all ${
+                                                                    activeTool === 'select' ? 'cursor-move' : ''
+                                                                } ${
+                                                                    isSelected && activeTool === 'select' ? 'ring-2 ring-blue-500 bg-blue-50/70 shadow-sm' : ''
                                                                 }`}
                                                             >
                                                                 {anno.text}
@@ -999,8 +1017,8 @@ export default function VisualPdfEditor({ auth }) {
                                                             backgroundColor: anno.color,
                                                             zIndex: 31,
                                                         }}
-                                                        className={`annotation-item pointer-events-auto cursor-move rounded-xs ${
-                                                            isSelected ? 'ring-2 ring-blue-500 shadow-sm' : 'hover:ring-1 hover:ring-slate-400'
+                                                        className={`annotation-item rounded-xs ${isPointerActive ? 'pointer-events-auto cursor-move' : 'pointer-events-none'} ${
+                                                            isSelected && activeTool === 'select' ? 'ring-2 ring-blue-500 shadow-sm' : ''
                                                         }`}
                                                     />
                                                 );
@@ -1019,8 +1037,8 @@ export default function VisualPdfEditor({ auth }) {
                                                             height: `${anno.height}px`,
                                                             zIndex: 32,
                                                         }}
-                                                        className={`annotation-item pointer-events-auto cursor-move p-0.5 rounded ${
-                                                            isSelected ? 'ring-2 ring-blue-500 shadow-sm' : 'hover:ring-1 hover:ring-slate-400'
+                                                        className={`annotation-item p-0.5 rounded ${isPointerActive ? 'pointer-events-auto cursor-move' : 'pointer-events-none'} ${
+                                                            isSelected && activeTool === 'select' ? 'ring-2 ring-blue-500 shadow-sm' : ''
                                                         }`}
                                                     >
                                                         <img src={anno.src} alt="Stamp" className="w-full h-full object-contain pointer-events-none" />
@@ -1031,7 +1049,7 @@ export default function VisualPdfEditor({ auth }) {
                                             return null;
                                         })}
 
-                                        {/* Freehand drawing */}
+                                        {/* Freehand drawing paths */}
                                         {isDrawing && currentPath.length > 1 && (
                                             <svg className="absolute inset-0 w-full h-full pointer-events-none z-40">
                                                 <polyline
