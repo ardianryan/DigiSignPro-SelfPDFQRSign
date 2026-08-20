@@ -1,8 +1,33 @@
+# Logs and Environment
 *.log
 .DS_Store
 .env
-.env.backup
-.env.production
+.env.*
+!.env.example
+
+# Security & Private Certificates / Keys
+*.pem
+*.key
+*.pfx
+*.p12
+*.crt
+*.cer
+*.pub
+/auth.json
+
+# Database Dumps & SQLite local files
+*.sql
+*.sqlite
+*.db
+*.dump
+*.tar
+*.gz
+*.bak
+*.swp
+*.swo
+*~
+
+# IDE & Editor metadata
 .phpactor.json
 .phpunit.result.cache
 /.codex
@@ -12,15 +37,30 @@
 /.phpunit.cache
 /.vscode
 /.zed
-/auth.json
+
+# Dependencies & Build artifacts
 /node_modules
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage
-/storage/*.key
-/storage/pail
 /vendor
 _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Storage folders
+/storage/*.key
+/storage/pail
+/storage/app/backups/*
+/storage/app/signatures/*
+/storage/app/temp/*
+/storage/app/public/*
+/storage/logs/*
+!storage/logs/.gitignore
+
+# Legacy files security
+old/config/credentials.php
+old/digisign.db
+old/debug_sign.log
+old/updates/*/files/digisign.db
