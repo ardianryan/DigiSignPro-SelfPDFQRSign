@@ -12,36 +12,38 @@ export default function VisualPdfEditor({ auth }) {
     const [scale, setScale] = useState(1.25);
     const [activeTool, setActiveTool] = useState('select'); // 'select', 'edit-pdf-text', 'text', 'image', 'whiteout', 'draw'
     
-    // Annotations State per page: { [pageNum]: [ { id, type: 'text'|'image'|'rect'|'draw', x, y, width, height, text, color, size, font } ] }
+    // Annotations per page: { [pageNum]: [ { id, type, x, y, width, height, text, color, size, font, isBold, isItalic, bg } ] }
     const [annotations, setAnnotations] = useState({});
     const [selectedAnnotationId, setSelectedAnnotationId] = useState(null);
     const [editingAnnotationId, setEditingAnnotationId] = useState(null);
 
-    // Text Layer items from PDF.js for clickable text editing: [{ str, x, y, width, height, fontSize, fontName }]
+    // Text items extracted by PDF.js for interactive text replacement
     const [pdfTextItems, setPdfTextItems] = useState([]);
 
-    // Tool Configs
+    // Toolbar settings
     const [textColor, setTextColor] = useState('#0f172a');
-    const [textSize, setTextSize] = useState(16);
+    const [textSize, setTextSize] = useState(14);
     const [textFont, setTextFont] = useState('Helvetica'); // 'Helvetica', 'TimesRoman', 'Courier'
+    const [textBold, setTextBold] = useState(false);
+    const [textItalic, setTextItalic] = useState(false);
     const [whiteoutColor, setWhiteoutColor] = useState('#ffffff');
     const [brushColor, setBrushColor] = useState('#2563eb');
     const [brushSize, setBrushSize] = useState(3);
 
-    // Canvas & Drawing refs
+    // Refs
     const canvasRef = useRef(null);
-    const overlayRef = useRef(null);
+    const workspaceRef = useRef(null);
     const [isDrawing, setIsDrawing] = useState(false);
     const [currentPath, setCurrentPath] = useState([]);
     const [isProcessing, setIsProcessing] = useState(false);
     const [isDraggingFile, setIsDraggingFile] = useState(false);
 
-    // Dragging Annotation State
+    // Dragging element state
     const [draggingElementId, setDraggingElementId] = useState(null);
     const dragStartPos = useRef({ x: 0, y: 0 });
     const elementStartPos = useRef({ x: 0, y: 0 });
 
-    // Dynamic PDF.js CDN loader
+    // Dynamic PDF.js loader
     useEffect(() => {
         if (window.pdfjsLib) return;
 
@@ -53,7 +55,7 @@ export default function VisualPdfEditor({ auth }) {
         document.body.appendChild(script);
     }, []);
 
-    // Load PDF file
+    // Load PDF
     const processPdfFile = async (selected) => {
         if (!selected || (selected.type !== 'application/pdf' && !selected.name.toLowerCase().endsWith('.pdf'))) {
             Swal.fire('Format Salah', 'Pilih file PDF yang valid.', 'warning');
@@ -61,7 +63,7 @@ export default function VisualPdfEditor({ auth }) {
         }
 
         if (!window.pdfjsLib) {
-            Swal.fire('Memuat Modul', 'Modul PDF Viewer sedang diinisialisasi, silakan coba 1 detik lagi.', 'info');
+            Swal.fire('Memuat Modul', 'Modul PDF Viewer sedang diinisialisasi, silakan coba lagi.', 'info');
             return;
         }
 
@@ -97,7 +99,7 @@ export default function VisualPdfEditor({ auth }) {
         }
     };
 
-    // Render current page to canvas & extract text content for selectable text layer
+    // Render PDF page & Extract selectable text spans
     useEffect(() => {
         if (!pdfDocProxy || !canvasRef.current) return;
 
@@ -116,23 +118,20 @@ export default function VisualPdfEditor({ auth }) {
                 canvas.width = viewport.width;
                 canvas.height = viewport.height;
 
-                const renderContext = {
+                renderTask = page.render({
                     canvasContext: ctx,
                     viewport: viewport,
-                };
-
-                renderTask = page.render(renderContext);
+                });
                 await renderTask.promise;
                 if (isCancelled) return;
 
-                // Extract PDF native text spans for interactive text layer & in-place editing
+                // Extract text items with fonts and coordinates
                 const textContent = await page.getTextContent();
                 const items = [];
 
                 for (const item of textContent.items) {
                     if (!item.str || item.str.trim() === '') continue;
 
-                    // Convert PDF transform matrix to viewport coordinates
                     const tx = window.pdfjsLib.Util.transform(viewport.transform, item.transform);
                     const itemFontSize = Math.sqrt((tx[0] * tx[0]) + (tx[1] * tx[1]));
                     const itemWidth = item.width * scale;
@@ -140,14 +139,36 @@ export default function VisualPdfEditor({ auth }) {
                     const x = tx[4];
                     const y = tx[5] - itemFontSize; // normalize baseline to top
 
+                    // Auto font detection from PDF.js fontName
+                    let detectedFont = 'Helvetica';
+                    let isBold = false;
+                    let isItalic = false;
+                    const fontNameLower = (item.fontName || '').toLowerCase();
+
+                    if (fontNameLower.includes('times') || fontNameLower.includes('serif') || fontNameLower.includes('roman') || fontNameLower.includes('cambria')) {
+                        detectedFont = 'TimesRoman';
+                    } else if (fontNameLower.includes('courier') || fontNameLower.includes('mono') || fontNameLower.includes('consolas')) {
+                        detectedFont = 'Courier';
+                    }
+
+                    if (fontNameLower.includes('bold') || fontNameLower.includes('black') || fontNameLower.includes('heavy')) {
+                        isBold = true;
+                    }
+                    if (fontNameLower.includes('italic') || fontNameLower.includes('oblique')) {
+                        isItalic = true;
+                    }
+
                     items.push({
                         str: item.str,
                         x: Math.max(0, x),
                         y: Math.max(0, y),
-                        width: Math.max(10, itemWidth),
+                        width: Math.max(12, itemWidth),
                         height: Math.max(12, itemHeight + 2),
                         fontSize: Math.round(itemFontSize),
                         fontName: item.fontName,
+                        detectedFont,
+                        isBold,
+                        isItalic,
                     });
                 }
 
@@ -165,14 +186,63 @@ export default function VisualPdfEditor({ auth }) {
         };
     }, [pdfDocProxy, pageNum, scale]);
 
-    // Handle Overlay Canvas Click to Add Text Inline or Whiteout
-    const handleOverlayClick = (e) => {
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.closest('.annotation-item')) {
+    // Click on PDF Text to Edit Directly (Automatic Font Matching & Whiteout)
+    const handlePdfTextClick = (item, e) => {
+        e.stopPropagation();
+        
+        // Auto sync toolbar with detected font & size
+        setTextFont(item.detectedFont);
+        setTextSize(item.fontSize);
+        setTextBold(item.isBold);
+        setTextItalic(item.isItalic);
+
+        // 1. Create a matching whiteout patch underneath the original text
+        const whiteoutId = `rect_auto_${Date.now()}`;
+        const whiteoutAnno = {
+            id: whiteoutId,
+            type: 'rect',
+            x: Math.max(0, item.x - 2),
+            y: Math.max(0, item.y - 1),
+            width: item.width + 6,
+            height: item.height + 4,
+            color: '#ffffff',
+        };
+
+        // 2. Create the editable text annotation with auto-matched font and size
+        const textId = `text_edit_${Date.now() + 1}`;
+        const textAnno = {
+            id: textId,
+            type: 'text',
+            x: item.x,
+            y: item.y,
+            text: item.str,
+            color: textColor,
+            size: item.fontSize,
+            font: item.detectedFont,
+            isBold: item.isBold,
+            isItalic: item.isItalic,
+            width: Math.max(item.width + 24, 100),
+            height: Math.max(item.height + 6, 24),
+        };
+
+        setAnnotations(prev => ({
+            ...prev,
+            [pageNum]: [...(prev[pageNum] || []), whiteoutAnno, textAnno]
+        }));
+
+        setSelectedAnnotationId(textId);
+        setEditingAnnotationId(textId);
+        setActiveTool('select');
+    };
+
+    // Click anywhere on workspace to add new text, whiteout, or deselect
+    const handleWorkspaceClick = (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.closest('.annotation-item') || e.target.closest('.pdf-text-span')) {
             return;
         }
 
-        if (!overlayRef.current) return;
-        const rect = overlayRef.current.getBoundingClientRect();
+        if (!workspaceRef.current) return;
+        const rect = workspaceRef.current.getBoundingClientRect();
         const clickX = e.clientX - rect.left;
         const clickY = e.clientY - rect.top;
 
@@ -187,8 +257,10 @@ export default function VisualPdfEditor({ auth }) {
                 color: textColor,
                 size: textSize,
                 font: textFont,
+                isBold: textBold,
+                isItalic: textItalic,
                 width: 220,
-                height: Math.max(32, textSize + 14),
+                height: Math.max(30, textSize + 14),
             };
             addAnnotation(newAnno);
             setSelectedAnnotationId(newId);
@@ -200,9 +272,9 @@ export default function VisualPdfEditor({ auth }) {
                 id: newId,
                 type: 'rect',
                 x: clickX - 60,
-                y: clickY - 15,
+                y: clickY - 14,
                 width: 140,
-                height: 30,
+                height: 28,
                 color: whiteoutColor,
             };
             addAnnotation(newAnno);
@@ -212,47 +284,6 @@ export default function VisualPdfEditor({ auth }) {
             setEditingAnnotationId(null);
             setSelectedAnnotationId(null);
         }
-    };
-
-    // Replace Existing PDF Text in-place (Whiteout old text + Add new editable text on top)
-    const handlePdfTextClick = (item, e) => {
-        e.stopPropagation();
-        
-        // 1. Create a whiteout rectangle over the original text
-        const whiteoutId = `rect_auto_${Date.now()}`;
-        const whiteoutAnno = {
-            id: whiteoutId,
-            type: 'rect',
-            x: Math.max(0, item.x - 2),
-            y: Math.max(0, item.y - 1),
-            width: item.width + 6,
-            height: item.height + 4,
-            color: '#ffffff',
-        };
-
-        // 2. Create the replacement text annotation in-place with existing string
-        const textId = `text_edit_${Date.now() + 1}`;
-        const textAnno = {
-            id: textId,
-            type: 'text',
-            x: item.x,
-            y: item.y,
-            text: item.str,
-            color: textColor,
-            size: Math.max(10, item.fontSize),
-            font: textFont,
-            width: Math.max(item.width + 20, 100),
-            height: Math.max(item.height + 4, 24),
-        };
-
-        setAnnotations(prev => ({
-            ...prev,
-            [pageNum]: [...(prev[pageNum] || []), whiteoutAnno, textAnno]
-        }));
-
-        setSelectedAnnotationId(textId);
-        setEditingAnnotationId(textId);
-        setActiveTool('select');
     };
 
     const addAnnotation = (anno) => {
@@ -269,7 +300,7 @@ export default function VisualPdfEditor({ auth }) {
         }));
     };
 
-    // Upload & Insert Stamp Image
+    // Insert Stamp Image
     const handleImageUpload = (e) => {
         const imgFile = e.target.files[0];
         if (!imgFile) return;
@@ -300,9 +331,10 @@ export default function VisualPdfEditor({ auth }) {
             img.src = event.target.result;
         };
         reader.readAsDataURL(imgFile);
+        e.target.value = '';
     };
 
-    // Element Dragging Logic
+    // Element Dragging
     const handleElementMouseDown = (e, anno) => {
         if (editingAnnotationId === anno.id) return;
         e.stopPropagation();
@@ -341,10 +373,10 @@ export default function VisualPdfEditor({ auth }) {
         };
     }, [draggingElementId, pageNum]);
 
-    // Freehand Drawing Handlers
+    // Freehand Drawing
     const startDrawing = (e) => {
-        if (activeTool !== 'draw' || !overlayRef.current) return;
-        const rect = overlayRef.current.getBoundingClientRect();
+        if (activeTool !== 'draw' || !workspaceRef.current) return;
+        const rect = workspaceRef.current.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
 
@@ -353,8 +385,8 @@ export default function VisualPdfEditor({ auth }) {
     };
 
     const drawMove = (e) => {
-        if (!isDrawing || activeTool !== 'draw' || !overlayRef.current) return;
-        const rect = overlayRef.current.getBoundingClientRect();
+        if (!isDrawing || activeTool !== 'draw' || !workspaceRef.current) return;
+        const rect = workspaceRef.current.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
 
@@ -388,7 +420,7 @@ export default function VisualPdfEditor({ auth }) {
         setEditingAnnotationId(null);
     };
 
-    // Export & Bake Annotations into clean PDF using pdf-lib
+    // Export PDF with pdf-lib
     const handleExport = async () => {
         if (!file) return;
 
@@ -397,9 +429,18 @@ export default function VisualPdfEditor({ auth }) {
             const buffer = await file.arrayBuffer();
             const pdfDoc = await PDFDocument.load(buffer, { ignoreEncryption: true });
             
-            const fontHelvetica = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-            const fontTimes = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
-            const fontCourier = await pdfDoc.embedFont(StandardFonts.CourierBold);
+            const fontHelvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
+            const fontHelveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+            const fontHelveticaOblique = await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
+            const fontHelveticaBoldOblique = await pdfDoc.embedFont(StandardFonts.HelveticaBoldOblique);
+
+            const fontTimes = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+            const fontTimesBold = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
+            const fontTimesItalic = await pdfDoc.embedFont(StandardFonts.TimesRomanItalic);
+            const fontTimesBoldItalic = await pdfDoc.embedFont(StandardFonts.TimesRomanBoldItalic);
+
+            const fontCourier = await pdfDoc.embedFont(StandardFonts.Courier);
+            const fontCourierBold = await pdfDoc.embedFont(StandardFonts.CourierBold);
 
             const pdfPages = pdfDoc.getPages();
 
@@ -422,10 +463,20 @@ export default function VisualPdfEditor({ auth }) {
                         const pdfY = pdfHeight - (anno.y * ratioY) - fontSizeInPdf;
 
                         let selectedFont = fontHelvetica;
-                        if (anno.font === 'TimesRoman') selectedFont = fontTimes;
-                        if (anno.font === 'Courier') selectedFont = fontCourier;
+                        if (anno.font === 'TimesRoman') {
+                            if (anno.isBold && anno.isItalic) selectedFont = fontTimesBoldItalic;
+                            else if (anno.isBold) selectedFont = fontTimesBold;
+                            else if (anno.isItalic) selectedFont = fontTimesItalic;
+                            else selectedFont = fontTimes;
+                        } else if (anno.font === 'Courier') {
+                            selectedFont = anno.isBold ? fontCourierBold : fontCourier;
+                        } else {
+                            if (anno.isBold && anno.isItalic) selectedFont = fontHelveticaBoldOblique;
+                            else if (anno.isBold) selectedFont = fontHelveticaBold;
+                            else if (anno.isItalic) selectedFont = fontHelveticaOblique;
+                            else selectedFont = fontHelvetica;
+                        }
 
-                        // Parse Hex Color
                         const r = parseInt(anno.color.slice(1, 3), 16) / 255;
                         const g = parseInt(anno.color.slice(3, 5), 16) / 255;
                         const b = parseInt(anno.color.slice(5, 7), 16) / 255;
@@ -494,7 +545,6 @@ export default function VisualPdfEditor({ auth }) {
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
-            // Silent usage tracking
             fetch(route('tools.track_usage'), {
                 method: 'POST',
                 headers: {
@@ -507,7 +557,7 @@ export default function VisualPdfEditor({ auth }) {
 
             Swal.fire({
                 title: 'Berhasil Disimpan!',
-                text: 'Perubahan teks, gambar, dan editan Anda telah tertanam langsung ke dalam PDF.',
+                text: 'Perubahan teks dan berkas PDF telah berhasil diekspor.',
                 icon: 'success',
                 confirmButtonColor: '#2563eb',
             });
@@ -573,16 +623,16 @@ export default function VisualPdfEditor({ auth }) {
                                     {isDraggingFile ? 'Lepaskan Berkas PDF di Sini' : 'Pilih atau Tarik Berkas PDF ke Sini'}
                                 </h3>
                                 <p className="text-xs text-slate-500 mt-1 max-w-md">
-                                    Klik langsung pada teks dokumen untuk mengubahnya, ketik teks baru secara langsung, tempel stempel gambar, atau tutup teks lama.
+                                    Klik langsung pada teks dokumen untuk mengubahnya dengan otomatis penyesuaian font, atau tambahkan teks baru di posisi mana pun.
                                 </p>
                                 <input type="file" accept="application/pdf" onChange={handleFileChange} className="hidden" />
                             </label>
                         </div>
                     ) : (
                         <div className="space-y-3">
-                            {/* Top Main Toolbar */}
+                            {/* Top Toolbar */}
                             <div className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-slate-200 dark:border-gray-700 shadow-xs flex flex-wrap items-center justify-between gap-3">
-                                {/* Tools Selection */}
+                                {/* Tool Buttons */}
                                 <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 dark:bg-gray-700 p-1 rounded-lg">
                                     <button
                                         type="button"
@@ -603,7 +653,7 @@ export default function VisualPdfEditor({ auth }) {
                                         className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors ${
                                             activeTool === 'edit-pdf-text' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
                                         }`}
-                                        title="Klik pada kata atau kalimat di dokumen untuk menggantinya langsung"
+                                        title="Klik langsung pada teks dokumen untuk menggantinya"
                                     >
                                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -617,12 +667,12 @@ export default function VisualPdfEditor({ auth }) {
                                         className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors ${
                                             activeTool === 'text' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
                                         }`}
-                                        title="Klik di dokumen untuk mengetik teks langsung"
+                                        title="Klik di mana saja pada dokumen untuk mengetik teks"
                                     >
                                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path>
                                         </svg>
-                                        + Ketik Teks Baru
+                                        Ketik Teks Baru
                                     </button>
 
                                     <label className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
@@ -631,7 +681,7 @@ export default function VisualPdfEditor({ auth }) {
                                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                         </svg>
-                                        + Stempel Gambar
+                                        Stempel Gambar
                                         <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                                     </label>
 
@@ -662,7 +712,7 @@ export default function VisualPdfEditor({ auth }) {
                                     </button>
                                 </div>
 
-                                {/* Page Navigation & Zoom */}
+                                {/* Page Nav & Zoom */}
                                 <div className="flex items-center gap-2 text-xs">
                                     <button
                                         type="button"
@@ -709,7 +759,7 @@ export default function VisualPdfEditor({ auth }) {
                                     </button>
                                 </div>
 
-                                {/* Action Buttons */}
+                                {/* Actions */}
                                 <div className="flex items-center gap-2">
                                     {selectedAnnotationId && (
                                         <button
@@ -717,7 +767,7 @@ export default function VisualPdfEditor({ auth }) {
                                             onClick={deleteSelectedAnnotation}
                                             className="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 text-xs font-medium border border-red-200"
                                         >
-                                            Hapus Elemen
+                                            Hapus
                                         </button>
                                     )}
 
@@ -735,7 +785,7 @@ export default function VisualPdfEditor({ auth }) {
                                 </div>
                             </div>
 
-                            {/* Secondary Formatting Bar (Font, Size, Color) */}
+                            {/* Secondary Formatting Bar with Automatic Detection */}
                             <div className="bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 p-2.5 rounded-xl flex flex-wrap items-center justify-between gap-3 text-xs">
                                 <div className="flex flex-wrap items-center gap-3">
                                     <div className="flex items-center gap-1.5">
@@ -748,8 +798,8 @@ export default function VisualPdfEditor({ auth }) {
                                             }}
                                             className="border border-slate-300 dark:border-gray-600 rounded-md px-2 py-1 text-xs dark:bg-gray-700 dark:text-white"
                                         >
-                                            <option value="Helvetica">Helvetica (Arial)</option>
-                                            <option value="TimesRoman">Times New Roman</option>
+                                            <option value="Helvetica">Helvetica (Arial / Sans-Serif)</option>
+                                            <option value="TimesRoman">Times New Roman (Serif Resmi)</option>
                                             <option value="Courier">Courier (Monospace)</option>
                                         </select>
                                     </div>
@@ -765,13 +815,42 @@ export default function VisualPdfEditor({ auth }) {
                                                 if (selectedAnnotationId) updateAnnotation(selectedAnnotationId, { size: val });
                                             }}
                                             className="border border-slate-300 dark:border-gray-600 rounded-md px-2 py-1 text-xs w-16 text-center dark:bg-gray-700 dark:text-white"
-                                            min="8"
+                                            min="6"
                                             max="72"
                                         />
                                     </div>
 
+                                    <div className="flex items-center gap-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const next = !textBold;
+                                                setTextBold(next);
+                                                if (selectedAnnotationId) updateAnnotation(selectedAnnotationId, { isBold: next });
+                                            }}
+                                            className={`w-7 h-7 rounded border font-bold text-xs flex items-center justify-center ${
+                                                (selectedAnno ? selectedAnno.isBold : textBold) ? 'bg-blue-600 text-white border-blue-600' : 'border-slate-300 dark:border-gray-600 text-slate-700 dark:text-slate-300'
+                                            }`}
+                                        >
+                                            B
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const next = !textItalic;
+                                                setTextItalic(next);
+                                                if (selectedAnnotationId) updateAnnotation(selectedAnnotationId, { isItalic: next });
+                                            }}
+                                            className={`w-7 h-7 rounded border italic font-serif text-xs flex items-center justify-center ${
+                                                (selectedAnno ? selectedAnno.isItalic : textItalic) ? 'bg-blue-600 text-white border-blue-600' : 'border-slate-300 dark:border-gray-600 text-slate-700 dark:text-slate-300'
+                                            }`}
+                                        >
+                                            I
+                                        </button>
+                                    </div>
+
                                     <div className="flex items-center gap-1.5">
-                                        <span className="font-semibold text-slate-600 dark:text-slate-300">Warna Teks:</span>
+                                        <span className="font-semibold text-slate-600 dark:text-slate-300">Warna:</span>
                                         <input
                                             type="color"
                                             value={selectedAnno?.color || textColor}
@@ -784,32 +863,37 @@ export default function VisualPdfEditor({ auth }) {
                                     </div>
                                 </div>
 
-                                <div className="text-[11px] text-slate-500">
-                                    {activeTool === 'edit-pdf-text' && 'Mode Edit: Klik langsung pada teks dokumen di bawah untuk mengubahnya.'}
-                                    {activeTool === 'text' && 'Mode Teks: Klik pada posisi dokumen untuk mengetik teks langsung.'}
-                                    {activeTool === 'select' && 'Klik 2x pada teks untuk mengubah isi teks secara langsung.'}
+                                <div className="text-[11px] text-slate-500 font-medium">
+                                    💡 Tip: Klik langsung pada teks dokumen untuk mengedit kata/kalimat dengan font yang otomatis disesuaikan.
                                 </div>
                             </div>
 
-                            {/* Canvas Workspace & Text Layers */}
+                            {/* Canvas Workspace */}
                             <div className="bg-slate-200/80 dark:bg-gray-900 rounded-2xl p-6 overflow-auto flex justify-center min-h-[600px] border border-slate-200 dark:border-gray-800">
-                                <div className="relative shadow-md rounded-xs bg-white overflow-hidden select-none">
-                                    {/* 1. PDF Page Render Canvas */}
-                                    <canvas ref={canvasRef} className="block" />
+                                <div
+                                    ref={workspaceRef}
+                                    onClick={handleWorkspaceClick}
+                                    onMouseDown={startDrawing}
+                                    onMouseMove={drawMove}
+                                    onMouseUp={stopDrawing}
+                                    className={`relative shadow-md rounded-xs bg-white overflow-hidden select-none ${
+                                        activeTool === 'text' ? 'cursor-text' :
+                                        activeTool === 'edit-pdf-text' ? 'cursor-text' :
+                                        activeTool === 'whiteout' ? 'cursor-crosshair' :
+                                        activeTool === 'draw' ? 'cursor-crosshair' : 'cursor-default'
+                                    }`}
+                                >
+                                    {/* 1. PDF Page Render Canvas (Bottom) */}
+                                    <canvas ref={canvasRef} className="block pointer-events-none" />
 
-                                    {/* 2. PDF Native Text Layer (Selectable & Clickable) */}
-                                    <div className="absolute inset-0 pointer-events-none">
+                                    {/* 2. PDF Native Selectable / Clickable Text Spans (Middle, z-20) */}
+                                    <div className="absolute inset-0 z-20 pointer-events-none">
                                         {pdfTextItems.map((item, idx) => (
                                             <div
                                                 key={`pdf_text_${idx}`}
-                                                onClick={(e) => {
-                                                    if (activeTool === 'edit-pdf-text') {
-                                                        handlePdfTextClick(item, e);
-                                                    }
-                                                }}
-                                                onDoubleClick={(e) => handlePdfTextClick(item, e)}
+                                                onClick={(e) => handlePdfTextClick(item, e)}
+                                                className="pdf-text-span absolute pointer-events-auto cursor-pointer select-text text-transparent hover:bg-blue-400/25 hover:ring-1 hover:ring-blue-500 rounded-xs transition-colors"
                                                 style={{
-                                                    position: 'absolute',
                                                     left: `${item.x}px`,
                                                     top: `${item.y}px`,
                                                     width: `${item.width}px`,
@@ -817,30 +901,15 @@ export default function VisualPdfEditor({ auth }) {
                                                     fontSize: `${item.fontSize}px`,
                                                     lineHeight: `${item.height}px`,
                                                 }}
-                                                className={`transition-colors pointer-events-auto cursor-pointer select-text text-transparent hover:bg-blue-400/20 hover:ring-1 hover:ring-blue-400/50 rounded-xs ${
-                                                    activeTool === 'edit-pdf-text' ? 'ring-1 ring-dashed ring-blue-300 hover:bg-blue-500/25' : ''
-                                                }`}
-                                                title={activeTool === 'edit-pdf-text' ? 'Klik untuk mengganti teks ini' : 'Klik 2x untuk mengedit'}
+                                                title={`Klik untuk edit: "${item.str}" (Font: ${item.detectedFont})`}
                                             >
                                                 {item.str}
                                             </div>
                                         ))}
                                     </div>
 
-                                    {/* 3. Interactive Annotations Layer */}
-                                    <div
-                                        ref={overlayRef}
-                                        onClick={handleOverlayClick}
-                                        onMouseDown={startDrawing}
-                                        onMouseMove={drawMove}
-                                        onMouseUp={stopDrawing}
-                                        className={`absolute inset-0 ${
-                                            activeTool === 'text' ? 'cursor-text' :
-                                            activeTool === 'edit-pdf-text' ? 'cursor-text' :
-                                            activeTool === 'whiteout' ? 'cursor-crosshair' :
-                                            activeTool === 'draw' ? 'cursor-crosshair' : 'cursor-default'
-                                        }`}
-                                    >
+                                    {/* 3. Interactive Annotations Layer (Top, z-30) */}
+                                    <div className="absolute inset-0 z-30 pointer-events-none">
                                         {currentPageAnnos.map((anno) => {
                                             const isSelected = selectedAnnotationId === anno.id;
                                             const isEditing = editingAnnotationId === anno.id;
@@ -849,7 +918,7 @@ export default function VisualPdfEditor({ auth }) {
                                                 return (
                                                     <div
                                                         key={anno.id}
-                                                        className="annotation-item"
+                                                        className="annotation-item pointer-events-auto"
                                                         onMouseDown={(e) => handleElementMouseDown(e, anno)}
                                                         onDoubleClick={(e) => {
                                                             e.stopPropagation();
@@ -860,7 +929,7 @@ export default function VisualPdfEditor({ auth }) {
                                                             position: 'absolute',
                                                             left: `${anno.x}px`,
                                                             top: `${anno.y}px`,
-                                                            zIndex: isEditing ? 50 : 20,
+                                                            zIndex: isEditing ? 50 : 35,
                                                         }}
                                                     >
                                                         {isEditing ? (
@@ -874,11 +943,13 @@ export default function VisualPdfEditor({ auth }) {
                                                                         color: anno.color,
                                                                         fontSize: `${anno.size}px`,
                                                                         fontFamily: anno.font === 'TimesRoman' ? 'Times New Roman, serif' : anno.font === 'Courier' ? 'Courier, monospace' : 'Helvetica, Arial, sans-serif',
-                                                                        lineHeight: '1.25',
+                                                                        fontWeight: anno.isBold ? 'bold' : 'normal',
+                                                                        fontStyle: anno.isItalic ? 'italic' : 'normal',
+                                                                        lineHeight: '1.2',
                                                                         minWidth: '120px',
-                                                                        minHeight: '34px',
+                                                                        minHeight: '28px',
                                                                     }}
-                                                                    className="p-1 border-2 border-blue-500 rounded bg-white/95 text-slate-900 shadow-lg focus:outline-none resize"
+                                                                    className="p-1 border-2 border-blue-500 rounded bg-white text-slate-900 shadow-xl focus:outline-none resize"
                                                                     rows={Math.max(1, (anno.text.match(/\n/g) || []).length + 1)}
                                                                 />
                                                                 <button
@@ -898,12 +969,13 @@ export default function VisualPdfEditor({ auth }) {
                                                                     color: anno.color,
                                                                     fontSize: `${anno.size}px`,
                                                                     fontFamily: anno.font === 'TimesRoman' ? 'Times New Roman, serif' : anno.font === 'Courier' ? 'Courier, monospace' : 'Helvetica, Arial, sans-serif',
-                                                                    fontWeight: 'bold',
-                                                                    lineHeight: '1.25',
+                                                                    fontWeight: anno.isBold ? 'bold' : 'normal',
+                                                                    fontStyle: anno.isItalic ? 'italic' : 'normal',
+                                                                    lineHeight: '1.2',
                                                                     whiteSpace: 'pre-wrap',
                                                                 }}
                                                                 className={`px-1.5 py-0.5 rounded cursor-move select-none transition-all ${
-                                                                    isSelected ? 'ring-2 ring-blue-500 bg-blue-50/50 shadow-sm' : 'hover:ring-1 hover:ring-slate-400'
+                                                                    isSelected ? 'ring-2 ring-blue-500 bg-blue-50/70 shadow-sm' : 'hover:ring-1 hover:ring-slate-400'
                                                                 }`}
                                                             >
                                                                 {anno.text}
@@ -925,9 +997,9 @@ export default function VisualPdfEditor({ auth }) {
                                                             width: `${anno.width}px`,
                                                             height: `${anno.height}px`,
                                                             backgroundColor: anno.color,
-                                                            zIndex: 10,
+                                                            zIndex: 31,
                                                         }}
-                                                        className={`annotation-item cursor-move rounded-xs ${
+                                                        className={`annotation-item pointer-events-auto cursor-move rounded-xs ${
                                                             isSelected ? 'ring-2 ring-blue-500 shadow-sm' : 'hover:ring-1 hover:ring-slate-400'
                                                         }`}
                                                     />
@@ -945,9 +1017,9 @@ export default function VisualPdfEditor({ auth }) {
                                                             top: `${anno.y}px`,
                                                             width: `${anno.width}px`,
                                                             height: `${anno.height}px`,
-                                                            zIndex: 15,
+                                                            zIndex: 32,
                                                         }}
-                                                        className={`annotation-item cursor-move p-0.5 rounded ${
+                                                        className={`annotation-item pointer-events-auto cursor-move p-0.5 rounded ${
                                                             isSelected ? 'ring-2 ring-blue-500 shadow-sm' : 'hover:ring-1 hover:ring-slate-400'
                                                         }`}
                                                     >
@@ -959,9 +1031,9 @@ export default function VisualPdfEditor({ auth }) {
                                             return null;
                                         })}
 
-                                        {/* Freehand drawing stroke */}
+                                        {/* Freehand drawing */}
                                         {isDrawing && currentPath.length > 1 && (
-                                            <svg className="absolute inset-0 w-full h-full pointer-events-none z-30">
+                                            <svg className="absolute inset-0 w-full h-full pointer-events-none z-40">
                                                 <polyline
                                                     points={currentPath.map(p => `${p.x},${p.y}`).join(' ')}
                                                     fill="none"
