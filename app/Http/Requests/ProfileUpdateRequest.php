@@ -41,7 +41,7 @@ class ProfileUpdateRequest extends FormRequest
                 'required',
                 'string',
                 'min:2',
-                'max:' . $maxLen,
+                'max:'.$maxLen,
                 'regex:/^[A-Za-z]+$/',
             ],
         ];

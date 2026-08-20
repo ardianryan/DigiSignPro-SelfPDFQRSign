@@ -1,192 +1,288 @@
-# DigiSign Pro - Laravel + Inertia React Refactor Version
+<div align="center">
 
-Ini adalah repositori versi refaktor dari aplikasi **DigiSign Pro** menggunakan **Laravel 11**, **Inertia.js**, dan **ReactJS (Tailwind CSS)**. Struktur kode ini dirancang agar memiliki tampilan yang sangat mirip dengan versi PHP Native saat ini, serta memuat seluruh fitur database dan penandatanganan berkas secara lengkap.
+# 🔏 DigiSign Pro
 
----
+**Enterprise-Grade Self-Hosted Electronic Signature (TTE) & PDF QR Verification Platform**
 
-## Kebutuhan Sistem
-* **PHP**: `>= 8.2`
-* **Composer**: `>= 2.0`
-* **Node.js**: `>= 18.0` & **NPM**
-* **Database**: MySQL `>= 5.7` atau MariaDB `>= 10.3`
+[![Laravel 13](https://img.shields.io/badge/Laravel-13.x-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)](https://laravel.com)
+[![React 19](https://img.shields.io/badge/React-19.x-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
+[![Inertia.js](https://img.shields.io/badge/Inertia.js-2.x-9553E9?style=for-the-badge&logo=inertia&logoColor=white)](https://inertiajs.com)
+[![PHP 8.3+](https://img.shields.io/badge/PHP-8.3%2B-777BB4?style=for-the-badge&logo=php&logoColor=white)](https://php.net)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.x-06B6D4?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
+[![Tests Passing](https://img.shields.io/badge/Pest%20Tests-63%20Passed-22C55E?style=for-the-badge&logo=pest&logoColor=white)](tests)
+[![License MIT](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
+[![Security Hardened](https://img.shields.io/badge/Security-OWASP%20Hardened-F59E0B?style=for-the-badge&logo=security&logoColor=white)](SECURITY.md)
 
----
+<p align="center">
+  <a href="#-key-features">Key Features</a> •
+  <a href="#-architecture--tech-stack">Tech Stack</a> •
+  <a href="#-installation--setup">Quick Start</a> •
+  <a href="#-rest-api-reference">REST API</a> •
+  <a href="#-security-hardening-osi-layers">Security & OSI</a> •
+  <a href="#-contributing">Contributing</a>
+</p>
 
-## Langkah Instalasi & Setup
-
-Ikuti langkah-langkah berikut untuk memasang aplikasi di lingkungan lokal atau server Anda:
-
-### 1. Pastikan Anda Berada di Direktori Utama Proyek
-
-### 2. Pasang Dependensi PHP (Composer)
-```bash
-composer install
-```
-
-### 3. Pasang Dependensi Frontend (NPM)
-Gunakan opsi `--legacy-peer-deps` untuk menghindari konflik versi Vite & React:
-```bash
-npm install --legacy-peer-deps
-```
-
-### 4. Salin Konfigurasi Environment (`.env`)
-Salin file `.env.example` menjadi `.env`:
-```bash
-cp .env.example .env
-```
-Setelah disalin, buka file `.env` dan konfigurasikan koneksi database Anda:
-```env
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=nama_database_anda
-DB_USERNAME=username_database
-DB_PASSWORD=password_database
-```
-
-### 5. Generate Application Key
-```bash
-php artisan key:generate
-```
-
-### 6. Jalankan Migrasi Database
-Jalankan migrasi untuk membuat tabel `users`, `app_settings`, dan `signatures` yang sesuai dengan skema versi PHP Native:
-```bash
-php artisan migrate
-```
-
-Migrasi bersifat **idempotent** dan mendukung **DB DigiSign lama**:
-- Jika tabel sudah ada, hanya menambahkan kolom Laravel yang kurang (bukan drop data).
-- Bisa dijalankan ulang lewat **Admin → Migrasi Database** (wajib isi ulang password admin).
-- Adapter legacy juga mengisi `document_name` kosong dan membuat tabel support (`sessions`, `password_reset_tokens`, cache, jobs).
-
-**Import data lama (ringkas):**
-1. Arahkan `.env` ke database MySQL lama, **atau** import dump `users` / `app_settings` / `signatures`.
-2. Jalankan `php artisan migrate` (atau tombol migrasi di panel admin + password).
-3. Pastikan file upload/S3 path masih valid.
-
-**Deploy kode aplikasi:** via CI/CD (git pull / build / deploy). Unggah paket update ZIP sudah dihapus / deprecated.
-
-### Production: halaman putih / console `5173 CONNECTION_REFUSED`
-
-Laravel mencoba Vite **dev server** jika file `public/hot` ada. Di production:
-
-```bash
-rm -f public/hot
-# pastikan asset build ada:
-ls public/build/manifest.json
-# jika belum ada:
-npm ci && npm run build
-
-php artisan optimize:clear
-# .env production:
-# APP_ENV=production
-# APP_DEBUG=false
-# APP_URL=https://sign.ppti.me
-```
-
-Repo menyertakan `public/build` agar `git pull` cukup untuk CSS/JS (tanpa `npm run dev` di server).
-
-**Pindah dari DigiSign PHP native (sekali saja):**
-```bash
-php artisan digisign:legacy-cutover
-```
-Detail: [`docs/LEGACY_CUTOVER.md`](docs/LEGACY_CUTOVER.md). Session lama tidak dipindah — user login ulang. Setelah cutover, update harian hanya CI/CD + Migrasi Database (password admin).
-
-### 7. Seed Data Awal (Admin + Settings)
-```bash
-php artisan db:seed
-```
-
-Akun default setelah seed:
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | `admin@example.com` | `password` |
-| User | `user@example.com` | `password` |
-
-### 8. Storage Link (opsional, untuk logo/public files)
-```bash
-php artisan storage:link
-```
-
-> **Catatan:** Install wizard multi-step PHP native diganti alur standar Laravel di atas (lebih aman & portabel). Versi aplikasi tercatat di file `version.lock` (default `2.0.0`).
+</div>
 
 ---
 
-## Cara Menjalankan Aplikasi di Lokal
+## 📌 Overview
 
-Jalankan dua perintah berikut di terminal terpisah:
+**DigiSign Pro** is an open-source, production-ready Electronic Signature (*Tanda Tangan Elektronik / TTE*) system designed for organizations, enterprises, and developers who need complete ownership over their documents and cryptographic verification trails.
 
-* **Menjalankan Server Backend PHP**:
-  ```bash
-  php artisan serve
-  ```
-  Aplikasi akan berjalan di `http://127.0.0.1:8000`.
+Built with **Laravel 13** and **Inertia.js + React**, DigiSign Pro provides seamless drag-and-drop QR placement, bulk document processing, password-protected PDF encryption, cloud object storage synchronization, and a developer-friendly REST API.
 
-* **Menjalankan Compiling Asset Frontend (Vite)**:
-  ```bash
-  npm run dev
-  ```
+---
 
-Untuk production build frontend:
-```bash
-npm run build
+## ✨ Key Features
+
+* **📄 Interactive Single PDF Signer**:
+  * Real-time PDF preview powered by PDF.js with visual drag-and-drop QR stamp positioning.
+  * Automated coordinate translation from CSS visual pixels to PDF points and millimeters (mm).
+  * Customizable stamp captions (Signer Name, Position, Verification ID, Timestamp).
+  * AES PDF encryption with mandatory passphrase password protection.
+
+* **📦 Bulk Batch PDF Signing**:
+  * Upload ZIP archives containing multiple PDF files.
+  * Single-placement coordinate propagation across all documents in the batch.
+  * Instant batch packaging with signed ZIP download.
+
+* **🏷️ Standalone TTE QR (Manual Signatures)**:
+  * Generate high-resolution QR verification codes for physical or external documents without uploading source PDFs.
+  * Optional follow-up encrypted PDF uploads.
+
+* **🔍 Public QR Verification Portal**:
+  * Dual-mode URL resolution: supports modern path routes (`/verify/{code}`) and legacy query tokens (`/verify/?token={code}`).
+  * Instant validity check, document metadata lookup, and tamper detection.
+
+* **☁️ Multi-Driver Object Storage**:
+  * Hybrid storage support: Local Server Storage, Amazon S3, Cloudflare R2, MinIO, or Dual Storage (*Local + Cloud*).
+  * Integrated Cloud Storage Explorer with real-time bucket statistics and file management.
+
+* **⚡ Developer REST API (v1)**:
+  * Per-user API key authentication (`Bearer` or `X-API-Key` header).
+  * Complete programmatic signing, verification, and history management endpoints.
+  * Machine-readable documentation endpoint at `/api/v1/docs/quickapi.md`.
+
+* **👥 Comprehensive Admin Panel**:
+  * Role-Based Access Control (RBAC) with User and Administrator tiers.
+  * User management, custom TTE initials prefix (`signature_prefix`), and profile customization.
+  * System branding, logo uploads, file upload size quotas, and database/media backup & restore console.
+
+---
+
+## 🏛️ Architecture & Tech Stack
+
+```
++-------------------------------------------------------------------------------+
+|                             Client / Frontend                                 |
+|          React 19 • Inertia.js 2.0 • Tailwind CSS • SweetAlert2 • PDF.js      |
++---------------------------------------+---------------------------------------+
+                                        | (Inertia Wire Protocol / JSON API)
++---------------------------------------v---------------------------------------+
+|                             Laravel 13 Backend                                |
+|  - SecurityHeadersMiddleware (HSTS, CSP, X-Frame-Options, Nosniff)            |
+|  - Multi-tier Rate Limiters (Auth, Verify, Heavy Signing, REST API)           |
+|  - FPDI Protection / FPDF / TCPDF / Chillerlan QR Code Engine                 |
+|  - Dynamic Flysystem S3 & Cloudflare R2 Runtime Adapter                       |
++---------------------------------------+---------------------------------------+
+                                        |
+                 +----------------------+----------------------+
+                 |                                             |
++----------------v------------------+         +----------------v----------------+
+|     MySQL / MariaDB Storage       |         |   Cloud Object Storage (S3/R2)  |
+|  Users, Signatures, App Settings  |         | Encrypted PDFs, ZIPs, Signatures|
++-----------------------------------+         +---------------------------------+
 ```
 
----
-
-## Fitur & Pemetaan Struktur Kode Laravel
-
-Berikut adalah tabel pemetaan halaman antarmuka versi PHP Native lama ke versi Laravel + React baru:
-
-| Fitur / Halaman Native | File Native Lama | File Halaman React (Inertia) Baru |
-| :--- | :--- | :--- |
-| **Login & Register** | `views/auth/login.php` / `register.php` | `resources/js/Pages/Auth/Login.jsx` / `Register.jsx` |
-| **Dashboard** | `views/dashboard.php` | `resources/js/Pages/Dashboard.jsx` |
-| **Single Sign** | `views/sign/single.php` & `process_single.php` | `resources/js/Pages/Sign/Single.jsx` |
-| **Bulk Sign** | `views/sign/bulk.php` & `process_bulk.php` | `resources/js/Pages/Sign/Bulk.jsx` |
-| **Layanan TTE QR (Manual)** | `views/sign/qr_list.php` & `qr_create.php` | `resources/js/Pages/Sign/QrList.jsx` & `QrCreate.jsx` |
-| **Riwayat** | `views/history.php` | `resources/js/Pages/History.jsx` |
-| **Profil** | `views/profile.php` | `resources/js/Pages/Profile/Edit.jsx` |
-| **Manajemen Pengguna** | `views/admin/users.php` | `resources/js/Pages/Admin/Users.jsx` |
-| **Pengaturan Aplikasi** | `views/admin/settings.php` | `resources/js/Pages/Admin/Settings.jsx` |
-| **Manajemen Storage** | `views/admin/storage.php` | `resources/js/Pages/Admin/Storage.jsx` |
-| **Migrasi Database** | `views/admin/updater.php` (ZIP deprecated) | `resources/js/Pages/Admin/Updater.jsx` |
-| **Backup & Restore** | `views/admin/backup.php` | `resources/js/Pages/Admin/Backup.jsx` |
-| **Verifikasi Publik** | `views/verify/index.php` | `resources/js/Pages/Verify.jsx` |
-| **Cookie Consent** | `includes/cookie_consent.php` | `resources/js/Components/CookieConsent.jsx` |
+### Core Technologies:
+* **Backend Framework**: [Laravel 13](https://laravel.com)
+* **Frontend UI**: [React 19](https://react.dev) with [Inertia.js v2](https://inertiajs.com) & [Tailwind CSS v3](https://tailwindcss.com)
+* **PDF Manipulation**: [FPDI](https://www.setasign.com/products/fpdi/about/) with [FPDI Protection](https://www.setasign.com/products/fpdi-protection/about/) & [TCPDF](https://tcpdf.org/)
+* **QR Engine**: [Chillerlan PHP QRCode](https://github.com/chillerlan/php-qrcode)
+* **Storage Abstraction**: [League Flysystem AWS S3 v3](https://flysystem.thephpleague.com/docs/adapter/aws-s3-v3/)
+* **Testing & QA**: [Pest PHP v4](https://pestphp.com/) & [Laravel Pint](https://laravel.com/docs/pint)
 
 ---
 
-## REST API
+## 🚀 Installation & Setup
 
-Base path: `/api/v1`
-
-| Auth | Header |
-|------|--------|
-| Per-user API key | `Authorization: Bearer digi_...` atau `X-API-Key: digi_...` |
-
-Setiap user memiliki API key di **Profil Saya** (lihat / regenerate / unduh `quickapi.md`).
-
-| Method | Endpoint | Auth | Keterangan |
-|--------|----------|------|------------|
-| GET | `/api/v1/health` | — | Health check |
-| GET | `/api/v1/verify/{code}` | — | Verifikasi publik |
-| GET | `/api/v1/docs/quickapi.md` | — | Docs ringkas (AI agent) |
-| GET | `/api/v1/me` | key | Profil user |
-| GET | `/api/v1/signatures` | key | List riwayat |
-| GET | `/api/v1/signatures/{id}` | key | Detail |
-| DELETE | `/api/v1/signatures/{id}` | key | Hapus |
-| POST | `/api/v1/sign/single` | key | Tanda tangan PDF (multipart) |
-| POST | `/api/v1/sign/qr-manual` | key | Buat TTE QR manual |
-
-File lengkap untuk AI agent: `docs/quickapi.md` (juga diunduh dari Profil).
+### System Prerequisites
+* **PHP**: `>= 8.3` (Extensions: `pdo_mysql`, `gd`, `zip`, `fileinfo`, `curl`, `mbstring`, `openssl`)
+* **Composer**: `>= 2.2`
+* **Node.js**: `>= 18.0` & **npm**
+* **Database**: MySQL `>= 8.0` or MariaDB `>= 10.4`
 
 ---
 
-## Penanganan Migrasi Database via Web Panel
-* **Menu**: Admin → **Migrasi Database**
-* **Route**: `POST /admin/database/migrate` (admin only)
-* **Keamanan**: wajib mengisi ulang password admin
-* **Fungsi**: adaptasi skema DigiSign legacy + `Artisan::call('migrate', ['--force' => true])` tanpa SSH
-* **Deploy kode**: gunakan CI/CD (bukan unggah ZIP)
+### Step-by-Step Local Installation
+
+1. **Clone Repository**:
+   ```bash
+   git clone https://github.com/ardianryan/DigiSignPro-SelfPDFQRSign.git
+   cd DigiSignPro-SelfPDFQRSign
+   ```
+
+2. **Install PHP Dependencies**:
+   ```bash
+   composer install
+   ```
+
+3. **Install Frontend Dependencies**:
+   ```bash
+   npm install --legacy-peer-deps
+   ```
+
+4. **Configure Environment File**:
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
+   *Edit `.env` and provide your database credentials (`DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`).*
+
+5. **Run Migrations & Seeders**:
+   ```bash
+   php artisan migrate --seed
+   ```
+
+   **Default Seeded Credentials**:
+   | Role | Email | Password |
+   |:---|:---|:---|
+   | **Administrator** | `admin@example.com` | `password` |
+   | **User Staff** | `user@example.com` | `password` |
+
+6. **Create Public Storage Symlink**:
+   ```bash
+   php artisan storage:link
+   ```
+
+7. **Start Development Servers**:
+   ```bash
+   # Terminal 1: Backend PHP Server
+   php artisan serve
+
+   # Terminal 2: Frontend Vite HMR
+   npm run dev
+   ```
+   Access application at: **`http://127.0.0.1:8000`**
+
+---
+
+### 🌐 Production Deployment Guide
+
+1. **Build Production Assets**:
+   ```bash
+   npm ci
+   npm run build
+   ```
+
+2. **Set Correct Server Permissions**:
+   ```bash
+   chmod -R 775 storage bootstrap/cache
+   chown -R www-data:www-data storage bootstrap/cache
+   ```
+
+3. **Optimize Laravel for Production**:
+   ```bash
+   php artisan config:cache
+   php artisan route:cache
+   php artisan view:cache
+   ```
+
+---
+
+## 🔒 Security Hardening (OSI Layer Model)
+
+DigiSign Pro adheres to defense-in-depth principles across the OSI model:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Layer 7 (Application)                                                       │
+│ • OWASP Security Headers (X-Frame-Options: SAMEORIGIN, Nosniff, Reflected) │
+│ • Magic-Byte Inspection (%PDF-, PK\x03\x04) & Zip Slip Traversal Guard     │
+│ • Tiered Rate Limiting (Auth: 5/min, Verify: 30/min, Sign: 15/min)          │
+│ • CSRF Protection & PDO Parameterized Prepared Statements                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Layer 6 (Presentation)                                                      │
+│ • HSTS (Strict-Transport-Security: max-age=31536000; preload)              │
+│ • AES-256 Cloud Object Encryption & PDF Passphrase Key Encapsulation        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Layer 5 (Session)                                                           │
+│ • Cookie Flags: HttpOnly=true, SameSite=Lax, Secure=auto                    │
+│ • Automatic Session Regeneration on Login & Role Elevation                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Layer 4 (Transport)                                                         │
+│ • TrustedProxy Header Resolution (Cloudflare / Reverse Proxy IP verification│
+│ • Request Payload Caps & Timeout Boundaries                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+For vulnerability reporting procedures and response SLAs, please read our [**Security Policy (SECURITY.md)**](SECURITY.md).
+
+---
+
+## 🔌 REST API Reference
+
+All REST endpoints reside under the `/api/v1` prefix.
+
+### Authentication
+Authenticate requests using your personal API key (generated in **Profil Saya**):
+```http
+Authorization: Bearer YOUR_API_KEY
+# OR
+X-API-Key: YOUR_API_KEY
+```
+
+### Key Endpoints:
+| Method | Endpoint | Access | Description |
+|:---|:---|:---|:---|
+| `GET` | `/api/v1/health` | Public | Service health & database connectivity check |
+| `GET` | `/api/v1/verify/{code}` | Public | Public cryptographic signature verification |
+| `GET` | `/api/v1/docs/quickapi.md` | Public | Quick API cheatsheet for developers & AI agents |
+| `GET` | `/api/v1/me` | Authenticated | Current user profile & signature prefix info |
+| `GET` | `/api/v1/signatures` | Authenticated | Paginated signature history |
+| `GET` | `/api/v1/signatures/{id}` | Authenticated | Specific signature details |
+| `DELETE` | `/api/v1/signatures/{id}` | Authenticated | Delete signature record & physical files |
+| `POST` | `/api/v1/sign/single` | Authenticated | Sign single PDF document (`multipart/form-data`) |
+| `POST` | `/api/v1/sign/qr-manual` | Authenticated | Generate manual TTE QR code record |
+
+---
+
+## 🧪 Testing & Code Quality
+
+DigiSign Pro comes with a comprehensive automated test suite powered by [Pest PHP](https://pestphp.com/):
+
+```bash
+# Execute full automated test suite
+php artisan test
+
+# Verify PSR-12 code style compliance
+./vendor/bin/pint --test
+```
+
+### Test Suite Metrics:
+* **63 Automated Tests** (Feature, Unit, Security, & Integration Tests)
+* **342 Assertions**
+* **100% Pass Rate**
+
+---
+
+## 🤝 Contributing & Community
+
+We warmly welcome contributions from the open-source community!
+
+* **Code of Conduct**: Please read our [Code of Conduct (CODE_OF_CONDUCT.md)](CODE_OF_CONDUCT.md).
+* **Contribution Guidelines**: Review [CONTRIBUTING.md](CONTRIBUTING.md) for branch workflows, conventional commits, and coding standards.
+* **Bug Reports & Features**: Use our structured [Issue Templates](.github/ISSUE_TEMPLATE/).
+
+---
+
+## 📄 License
+
+DigiSign Pro is open-source software licensed under the [**MIT License**](LICENSE).
+
+---
+
+<div align="center">
+  <sub>Developed & Maintained with ❤️ by <b>Ardian Ryan</b> and the open-source community.</sub>
+</div>

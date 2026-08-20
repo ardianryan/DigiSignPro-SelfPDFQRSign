@@ -2,9 +2,9 @@
 
 namespace App\Helpers;
 
+use chillerlan\QRCode\Output\QRGdImagePNG;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
-use chillerlan\QRCode\Output\QRGdImagePNG;
 
 class QrCodeHelper
 {
@@ -43,7 +43,7 @@ class QrCodeHelper
     public static function toTempFile(string $payload, ?string $directory = null, int $scale = 8): string
     {
         $directory = $directory ?: storage_path('app/temp');
-        if (!is_dir($directory)) {
+        if (! is_dir($directory)) {
             mkdir($directory, 0775, true);
         }
 
@@ -70,7 +70,7 @@ class QrCodeHelper
      */
     private static function trimWhiteBorder(string $pngBinary, int $pad = 1): string
     {
-        if (!function_exists('imagecreatefromstring')) {
+        if (! function_exists('imagecreatefromstring')) {
             return $pngBinary;
         }
 
@@ -83,6 +83,7 @@ class QrCodeHelper
         $h = imagesy($src);
         if ($w < 4 || $h < 4) {
             imagedestroy($src);
+
             return $pngBinary;
         }
 
@@ -90,6 +91,7 @@ class QrCodeHelper
             $r = ($rgb >> 16) & 0xFF;
             $g = ($rgb >> 8) & 0xFF;
             $b = $rgb & 0xFF;
+
             // near-white / light gray
             return $r > 245 && $g > 245 && $b > 245;
         };
@@ -101,7 +103,7 @@ class QrCodeHelper
 
         for ($y = 0; $y < $h; $y++) {
             for ($x = 0; $x < $w; $x++) {
-                if (!$isLight(imagecolorat($src, $x, $y))) {
+                if (! $isLight(imagecolorat($src, $x, $y))) {
                     if ($x < $minX) {
                         $minX = $x;
                     }
@@ -121,6 +123,7 @@ class QrCodeHelper
         // No dark pixels found — return original
         if ($maxX < $minX || $maxY < $minY) {
             imagedestroy($src);
+
             return $pngBinary;
         }
 
@@ -135,6 +138,7 @@ class QrCodeHelper
         // Already tight enough
         if ($cropW >= $w - 2 && $cropH >= $h - 2) {
             imagedestroy($src);
+
             return $pngBinary;
         }
 

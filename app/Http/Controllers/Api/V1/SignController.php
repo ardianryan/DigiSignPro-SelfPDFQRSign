@@ -44,6 +44,12 @@ class SignController extends BaseApiController
             return $this->fail("Ukuran file melebihi batas ({$mb} MB)", 422, 'file_too_large');
         }
 
+        // Security Hardening: Validate PDF Magic Bytes (%PDF-)
+        $pdfMagic = file_get_contents($request->file('pdf_file')->getRealPath(), false, null, 0, 5);
+        if (strpos($pdfMagic, '%PDF-') !== 0) {
+            return $this->fail('Berkas yang diunggah bukan format PDF yang valid.', 422, 'invalid_pdf_format');
+        }
+
         try {
             $x = (float) $request->input('x');
             $y = (float) $request->input('y');

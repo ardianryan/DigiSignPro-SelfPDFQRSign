@@ -55,7 +55,7 @@ class LoginRequest extends FormRequest
         $settings = AppSetting::first();
         if ($settings && $settings->maintenance_mode) {
             $user = Auth::user();
-            if (!$user || $user->role !== 'admin') {
+            if (! $user || $user->role !== 'admin') {
                 Auth::logout();
                 throw ValidationException::withMessages([
                     'email' => 'Aplikasi sedang dalam Mode Maintenance. Silakan coba lagi nanti.',

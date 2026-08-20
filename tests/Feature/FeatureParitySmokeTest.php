@@ -7,6 +7,7 @@ use App\Models\Signature;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class FeatureParitySmokeTest extends TestCase
@@ -362,7 +363,7 @@ class FeatureParitySmokeTest extends TestCase
                 'Accept' => 'application/json',
             ]);
             $this->fail('Expected ValidationException for missing password');
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             $this->assertArrayHasKey('password', $e->errors());
         }
 
@@ -373,7 +374,7 @@ class FeatureParitySmokeTest extends TestCase
                 'password' => 'wrong-password',
             ], ['Accept' => 'application/json']);
             $this->fail('Expected ValidationException for wrong password');
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             $this->assertArrayHasKey('password', $e->errors());
         }
 
@@ -392,7 +393,7 @@ class FeatureParitySmokeTest extends TestCase
         ['admin' => $admin] = $this->seedApp();
 
         $dir = storage_path('app/temp');
-        if (!is_dir($dir)) {
+        if (! is_dir($dir)) {
             mkdir($dir, 0775, true);
         }
         file_put_contents($dir.'/junk.txt', 'temp');

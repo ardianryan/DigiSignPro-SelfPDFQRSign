@@ -3,13 +3,14 @@
 namespace App\Helpers;
 
 use App\Models\AppSetting;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 class StorageHelper
 {
     private static $settings = null;
+
     private static $initialized = false;
 
     /**
@@ -29,13 +30,13 @@ class StorageHelper
             'storage_mode' => 'local',
             's3_bucket' => null,
             's3_region' => 'us-east-1',
-            's3_directory' => 'digisign/'
+            's3_directory' => 'digisign/',
         ], self::$settings);
 
         $mode = self::$settings['storage_mode'] ?? 'local';
 
         // Dynamically configure Laravel's s3 disk using database settings
-        if (($mode === 's3' || $mode === 'both') && !empty(self::$settings['s3_access_key'])) {
+        if (($mode === 's3' || $mode === 'both') && ! empty(self::$settings['s3_access_key'])) {
             config([
                 'filesystems.disks.s3.driver' => 's3',
                 'filesystems.disks.s3.key' => self::$settings['s3_access_key'],
@@ -43,7 +44,7 @@ class StorageHelper
                 'filesystems.disks.s3.region' => self::$settings['s3_region'] ?? 'us-east-1',
                 'filesystems.disks.s3.bucket' => self::$settings['s3_bucket'],
                 'filesystems.disks.s3.endpoint' => self::$settings['s3_endpoint'] ?: null,
-                'filesystems.disks.s3.use_path_style_endpoint' => !empty(self::$settings['s3_endpoint']),
+                'filesystems.disks.s3.use_path_style_endpoint' => ! empty(self::$settings['s3_endpoint']),
             ]);
         }
 
@@ -62,10 +63,10 @@ class StorageHelper
 
         // 1. Local Storage upload
         if ($mode === 'local' || $mode === 'both') {
-            $targetPath = 'uploads/signatures/' . $filename;
+            $targetPath = 'uploads/signatures/'.$filename;
             // Move file using Laravel Storage disk local
             if (Storage::disk('public')->put($targetPath, file_get_contents($tempSource))) {
-                $finalPath = 'storage/' . $targetPath;
+                $finalPath = 'storage/'.$targetPath;
             }
         }
 
@@ -73,19 +74,19 @@ class StorageHelper
         if ($mode === 's3' || $mode === 'both') {
             try {
                 $directory = self::$settings['s3_directory'] ?? 'digisign/';
-                $key = rtrim($directory, '/') . '/' . $filename;
+                $key = rtrim($directory, '/').'/'.$filename;
 
                 if (Storage::disk('s3')->put($key, file_get_contents($tempSource), [
-                    'ContentType' => $mimeType
+                    'ContentType' => $mimeType,
                 ])) {
                     if ($mode === 's3') {
-                        $finalPath = 's3://' . $key;
+                        $finalPath = 's3://'.$key;
                     }
                 }
             } catch (Throwable $e) {
-                Log::error("S3 Upload Error: " . $e->getMessage());
+                Log::error('S3 Upload Error: '.$e->getMessage());
                 if ($mode === 's3') {
-                    throw new \Exception("Gagal upload ke S3: " . $e->getMessage());
+                    throw new \Exception('Gagal upload ke S3: '.$e->getMessage());
                 }
             }
         }
@@ -113,8 +114,8 @@ class StorageHelper
             $key = substr($filePath, 5);
             $publicUrl = rtrim(self::$settings['s3_public_url'] ?? '', '/');
 
-            if (!empty($publicUrl)) {
-                return $publicUrl . '/' . ltrim($key, '/');
+            if (! empty($publicUrl)) {
+                return $publicUrl.'/'.ltrim($key, '/');
             }
 
             $endpoint = rtrim(self::$settings['s3_endpoint'] ?? '', '/');
@@ -125,14 +126,15 @@ class StorageHelper
                 if (empty($region)) {
                     $region = 'us-east-1';
                 }
-                return "https://{$bucket}.s3.{$region}.amazonaws.com/" . ltrim($key, '/');
+
+                return "https://{$bucket}.s3.{$region}.amazonaws.com/".ltrim($key, '/');
             }
 
             if (strpos($endpoint, $bucket) !== false) {
-                return $endpoint . '/' . ltrim($key, '/');
+                return $endpoint.'/'.ltrim($key, '/');
             }
 
-            return $endpoint . '/' . $bucket . '/' . ltrim($key, '/');
+            return $endpoint.'/'.$bucket.'/'.ltrim($key, '/');
         }
 
         // Local path
@@ -154,7 +156,7 @@ class StorageHelper
                 $key = substr($filePath, 5);
                 Storage::disk('s3')->delete(ltrim($key, '/'));
             } catch (Throwable $e) {
-                Log::error("S3 Delete Error: " . $e->getMessage());
+                Log::error('S3 Delete Error: '.$e->getMessage());
             }
         } else {
             // Local path cleanup (remove storage/ prefix to find the relative path inside public disk)

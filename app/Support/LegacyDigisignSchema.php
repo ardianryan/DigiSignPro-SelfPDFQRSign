@@ -39,7 +39,7 @@ class LegacyDigisignSchema
     {
         $steps = [];
 
-        if (!Schema::hasTable('users')) {
+        if (! Schema::hasTable('users')) {
             Schema::create('users', function (Blueprint $table) {
                 $table->id();
                 $table->string('name');
@@ -59,45 +59,45 @@ class LegacyDigisignSchema
         }
 
         Schema::table('users', function (Blueprint $table) use (&$steps) {
-            if (!Schema::hasColumn('users', 'email_verified_at')) {
+            if (! Schema::hasColumn('users', 'email_verified_at')) {
                 $table->timestamp('email_verified_at')->nullable()->after('email');
-                $steps[] = "Kolom users.email_verified_at ditambahkan.";
+                $steps[] = 'Kolom users.email_verified_at ditambahkan.';
             }
-            if (!Schema::hasColumn('users', 'remember_token')) {
+            if (! Schema::hasColumn('users', 'remember_token')) {
                 $table->rememberToken();
-                $steps[] = "Kolom users.remember_token ditambahkan.";
+                $steps[] = 'Kolom users.remember_token ditambahkan.';
             }
-            if (!Schema::hasColumn('users', 'role')) {
+            if (! Schema::hasColumn('users', 'role')) {
                 $table->enum('role', ['admin', 'user'])->default('user');
-                $steps[] = "Kolom users.role ditambahkan.";
+                $steps[] = 'Kolom users.role ditambahkan.';
             }
-            if (!Schema::hasColumn('users', 'position')) {
+            if (! Schema::hasColumn('users', 'position')) {
                 $table->string('position')->nullable();
-                $steps[] = "Kolom users.position ditambahkan.";
+                $steps[] = 'Kolom users.position ditambahkan.';
             }
-            if (!Schema::hasColumn('users', 'signature_path')) {
+            if (! Schema::hasColumn('users', 'signature_path')) {
                 $table->string('signature_path')->nullable();
-                $steps[] = "Kolom users.signature_path ditambahkan.";
+                $steps[] = 'Kolom users.signature_path ditambahkan.';
             }
-            if (!Schema::hasColumn('users', 'signature_prefix')) {
+            if (! Schema::hasColumn('users', 'signature_prefix')) {
                 $table->string('signature_prefix', 9)->default('DS');
-                $steps[] = "Kolom users.signature_prefix ditambahkan.";
+                $steps[] = 'Kolom users.signature_prefix ditambahkan.';
             }
-            if (!Schema::hasColumn('users', 'created_at')) {
+            if (! Schema::hasColumn('users', 'created_at')) {
                 $table->timestamp('created_at')->nullable();
-                $steps[] = "Kolom users.created_at ditambahkan.";
+                $steps[] = 'Kolom users.created_at ditambahkan.';
             }
-            if (!Schema::hasColumn('users', 'updated_at')) {
+            if (! Schema::hasColumn('users', 'updated_at')) {
                 $table->timestamp('updated_at')->nullable();
-                $steps[] = "Kolom users.updated_at ditambahkan.";
+                $steps[] = 'Kolom users.updated_at ditambahkan.';
             }
-            if (!Schema::hasColumn('users', 'api_key')) {
+            if (! Schema::hasColumn('users', 'api_key')) {
                 $table->string('api_key', 64)->nullable()->unique();
-                $steps[] = "Kolom users.api_key ditambahkan.";
+                $steps[] = 'Kolom users.api_key ditambahkan.';
             }
-            if (!Schema::hasColumn('users', 'api_key_created_at')) {
+            if (! Schema::hasColumn('users', 'api_key_created_at')) {
                 $table->timestamp('api_key_created_at')->nullable();
-                $steps[] = "Kolom users.api_key_created_at ditambahkan.";
+                $steps[] = 'Kolom users.api_key_created_at ditambahkan.';
             }
         });
 
@@ -120,7 +120,7 @@ class LegacyDigisignSchema
     {
         $steps = [];
 
-        if (!Schema::hasTable('app_settings')) {
+        if (! Schema::hasTable('app_settings')) {
             Schema::create('app_settings', function (Blueprint $table) {
                 $table->id();
                 $table->string('app_name')->default('DigiSign Pro');
@@ -170,7 +170,7 @@ class LegacyDigisignSchema
         ];
 
         foreach ($columns as $name => $adder) {
-            if (!Schema::hasColumn('app_settings', $name)) {
+            if (! Schema::hasColumn('app_settings', $name)) {
                 Schema::table('app_settings', function (Blueprint $table) use ($adder, $name, &$steps) {
                     $adder($table);
                     $steps[] = "Kolom app_settings.{$name} ditambahkan.";
@@ -185,7 +185,7 @@ class LegacyDigisignSchema
     {
         $steps = [];
 
-        if (!Schema::hasTable('signatures')) {
+        if (! Schema::hasTable('signatures')) {
             Schema::create('signatures', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('user_id')->constrained()->cascadeOnDelete();
@@ -220,7 +220,7 @@ class LegacyDigisignSchema
         ];
 
         foreach ($columns as $name => $adder) {
-            if (!Schema::hasColumn('signatures', $name)) {
+            if (! Schema::hasColumn('signatures', $name)) {
                 Schema::table('signatures', function (Blueprint $table) use ($adder, $name, &$steps) {
                     $adder($table);
                     $steps[] = "Kolom signatures.{$name} ditambahkan.";
@@ -289,7 +289,7 @@ class LegacyDigisignSchema
     {
         $steps = [];
 
-        if (!Schema::hasTable('cache')) {
+        if (! Schema::hasTable('cache')) {
             Schema::create('cache', function (Blueprint $table) {
                 $table->string('key')->primary();
                 $table->mediumText('value');
@@ -298,7 +298,7 @@ class LegacyDigisignSchema
             $steps[] = "Tabel 'cache' dibuat.";
         }
 
-        if (!Schema::hasTable('cache_locks')) {
+        if (! Schema::hasTable('cache_locks')) {
             Schema::create('cache_locks', function (Blueprint $table) {
                 $table->string('key')->primary();
                 $table->string('owner');
@@ -314,7 +314,7 @@ class LegacyDigisignSchema
     {
         $steps = [];
 
-        if (!Schema::hasTable('jobs')) {
+        if (! Schema::hasTable('jobs')) {
             Schema::create('jobs', function (Blueprint $table) {
                 $table->id();
                 $table->string('queue')->index();
@@ -327,7 +327,7 @@ class LegacyDigisignSchema
             $steps[] = "Tabel 'jobs' dibuat.";
         }
 
-        if (!Schema::hasTable('job_batches')) {
+        if (! Schema::hasTable('job_batches')) {
             Schema::create('job_batches', function (Blueprint $table) {
                 $table->string('id')->primary();
                 $table->string('name');
@@ -343,7 +343,7 @@ class LegacyDigisignSchema
             $steps[] = "Tabel 'job_batches' dibuat.";
         }
 
-        if (!Schema::hasTable('failed_jobs')) {
+        if (! Schema::hasTable('failed_jobs')) {
             Schema::create('failed_jobs', function (Blueprint $table) {
                 $table->id();
                 $table->string('uuid')->unique();

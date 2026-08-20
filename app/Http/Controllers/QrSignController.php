@@ -2,15 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
-use App\Models\Signature;
-use App\Helpers\StorageHelper;
 use App\Helpers\QrCodeHelper;
+use App\Helpers\StorageHelper;
+use App\Models\Signature;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use setasign\FpdiProtection\FpdiProtection;
 use Throwable;
-use Illuminate\Support\Facades\Log;
 
 class QrSignController extends Controller
 {
@@ -23,12 +22,12 @@ class QrSignController extends Controller
             $query->where('user_id', $user->id);
         }
 
-        if ($request->has('search') && !empty($request->search)) {
+        if ($request->has('search') && ! empty($request->search)) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('document_number', 'like', "%{$search}%")
-                  ->orWhere('document_subject', 'like', "%{$search}%")
-                  ->orWhere('verify_code', 'like', "%{$search}%");
+                    ->orWhere('document_subject', 'like', "%{$search}%")
+                    ->orWhere('verify_code', 'like', "%{$search}%");
             });
         }
 
@@ -49,7 +48,7 @@ class QrSignController extends Controller
 
         return Inertia::render('Sign/QrList', [
             'signatures' => $signatures,
-            'filters' => $request->only(['search'])
+            'filters' => $request->only(['search']),
         ]);
     }
 
@@ -69,7 +68,7 @@ class QrSignController extends Controller
             }
             $data = $data->first();
 
-            if (!$data) {
+            if (! $data) {
                 return redirect()->route('sign.qr.index')->withErrors(['error' => 'Data TTE QR tidak ditemukan.']);
             }
 
@@ -101,9 +100,9 @@ class QrSignController extends Controller
 
             $user = $request->user();
             $prefix = $user->signature_prefix ?: 'DS';
-            $verifyCode = $prefix . '-TTE-' . date('Ymd') . '-' . strtoupper(substr(md5(uniqid()), 0, 6));
-            
-            $signedTimestamp = $request->input('signed_at') . ' ' . date('H:i:s');
+            $verifyCode = $prefix.'-TTE-'.date('Ymd').'-'.strtoupper(substr(md5(uniqid()), 0, 6));
+
+            $signedTimestamp = $request->input('signed_at').' '.date('H:i:s');
 
             session(['tte_qr_password' => $request->input('pdf_password')]);
 
@@ -138,7 +137,7 @@ class QrSignController extends Controller
             }
             $signature = $signature->first();
 
-            if (!$signature) {
+            if (! $signature) {
                 return redirect()->route('sign.qr.index')->withErrors(['error' => 'Data TTE QR tidak ditemukan.']);
             }
 
@@ -153,17 +152,17 @@ class QrSignController extends Controller
                 if (empty($safeSubject)) {
                     $safeSubject = 'document';
                 }
-                $filename = $safeSubject . '_' . $signature->verify_code . '_signed.pdf';
+                $filename = $safeSubject.'_'.$signature->verify_code.'_signed.pdf';
 
                 $tempDir = storage_path('app/temp');
-                if (!file_exists($tempDir)) {
+                if (! file_exists($tempDir)) {
                     mkdir($tempDir, 0777, true);
                 }
-                $tempSigned = $tempDir . '/signed_qr_' . uniqid() . '.pdf';
+                $tempSigned = $tempDir.'/signed_qr_'.uniqid().'.pdf';
 
                 $pdf = new FpdiProtection('P', 'mm', 'A4', true);
                 $pageCount = $pdf->setSourceFile($file->getRealPath());
-                
+
                 for ($p = 1; $p <= $pageCount; $p++) {
                     $tplId = $pdf->importPage($p);
                     $size = $pdf->getTemplateSize($tplId);
@@ -190,8 +189,9 @@ class QrSignController extends Controller
                 return redirect()->route('sign.qr.index')->with('success', 'Dokumen manual berhasil diunggah.');
 
             } catch (Throwable $e) {
-                Log::error("Manual QR PDF Upload Error: " . $e->getMessage());
-                return redirect()->back()->withErrors(['error' => 'Gagal memproses proteksi PDF: ' . $e->getMessage()]);
+                Log::error('Manual QR PDF Upload Error: '.$e->getMessage());
+
+                return redirect()->back()->withErrors(['error' => 'Gagal memproses proteksi PDF: '.$e->getMessage()]);
             }
         }
 

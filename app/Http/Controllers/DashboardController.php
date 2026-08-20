@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\AppSetting;
 use App\Models\Signature;
 use App\Models\User;
-use App\Models\AppSetting;
-use Inertia\Inertia;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
@@ -51,7 +50,7 @@ class DashboardController extends Controller
                 'required',
                 'string',
                 'min:2',
-                'max:' . $maxLen,
+                'max:'.$maxLen,
                 'regex:/^[A-Za-z]+$/',
             ],
         ], [

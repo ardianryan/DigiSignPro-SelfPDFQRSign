@@ -1,23 +1,22 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\SignatureHistoryController;
-use App\Http\Controllers\SingleSignController;
-use App\Http\Controllers\BulkSignController;
-use App\Http\Controllers\QrSignController;
-use App\Http\Controllers\VerificationController;
-use App\Http\Controllers\Admin\UserController as AdminUserController;
-use App\Http\Controllers\Admin\SettingController as AdminSettingController;
-use App\Http\Controllers\Admin\StorageController as AdminStorageController;
 use App\Http\Controllers\Admin\BackupController as AdminBackupController;
 use App\Http\Controllers\Admin\DatabaseController as AdminDatabaseController;
-use App\Http\Controllers\Admin\UpdaterController as AdminUpdaterController;
 use App\Http\Controllers\Admin\LegacyCutoverController as AdminLegacyCutoverController;
-use App\Http\Controllers\ApiKeyController;
+use App\Http\Controllers\Admin\SettingController as AdminSettingController;
+use App\Http\Controllers\Admin\StorageController as AdminStorageController;
+use App\Http\Controllers\Admin\UpdaterController as AdminUpdaterController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\ApiDocsController;
+use App\Http\Controllers\ApiKeyController;
+use App\Http\Controllers\BulkSignController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\QrSignController;
+use App\Http\Controllers\SignatureHistoryController;
+use App\Http\Controllers\SingleSignController;
+use App\Http\Controllers\VerificationController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 // 1. Guest routes
 Route::get('/', function () {
@@ -29,16 +28,16 @@ Route::get('/verify/{code?}', [VerificationController::class, 'verify'])->name('
 
 // 2. Authenticated user routes
 Route::middleware(['auth'])->group(function () {
-    
+
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/dashboard/prefix', [DashboardController::class, 'updatePrefix'])->name('dashboard.prefix');
-    
+
     // Signature History (batch route must be registered before {signature})
     Route::get('/history', [SignatureHistoryController::class, 'index'])->name('history.index');
     Route::delete('/history/batch/{batchId}', [SignatureHistoryController::class, 'destroyBatch'])->name('history.destroy_batch');
     Route::delete('/history/{signature}', [SignatureHistoryController::class, 'destroy'])->name('history.destroy');
-    
+
     // Profile settings
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -59,14 +58,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/sign/qr-manual', [QrSignController::class, 'index'])->name('sign.qr.index');
     Route::get('/sign/qr-manual/create', [QrSignController::class, 'create'])->name('sign.qr.create');
     Route::post('/sign/qr-manual', [QrSignController::class, 'store'])->name('sign.qr.store');
-    
+
     // Legacy Route Redirects
-    Route::get('/sign/qr_list', fn() => redirect()->route('sign.qr.index'));
-    Route::get('/sign/qr_create', fn() => redirect()->route('sign.qr.create'));
-    Route::get('/sign/single.php', fn() => redirect()->route('sign.single.create'));
-    Route::get('/sign/bulk.php', fn() => redirect()->route('sign.bulk.create'));
-    Route::get('/views/history.php', fn() => redirect()->route('history.index'));
-    
+    Route::get('/sign/qr_list', fn () => redirect()->route('sign.qr.index'));
+    Route::get('/sign/qr_create', fn () => redirect()->route('sign.qr.create'));
+    Route::get('/sign/single.php', fn () => redirect()->route('sign.single.create'));
+    Route::get('/sign/bulk.php', fn () => redirect()->route('sign.bulk.create'));
+    Route::get('/views/history.php', fn () => redirect()->route('history.index'));
+
     // 3. Admin-only routes
     Route::middleware(['can:admin-only'])->group(function () {
         Route::get('/admin/users', [AdminUserController::class, 'index'])->name('admin.users.index');

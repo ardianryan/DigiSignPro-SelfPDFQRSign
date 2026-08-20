@@ -1,11 +1,11 @@
 <?php
 
+use App\Http\Controllers\Api\ApiDocsController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\MeController;
-use App\Http\Controllers\Api\V1\SignController;
 use App\Http\Controllers\Api\V1\SignatureController;
+use App\Http\Controllers\Api\V1\SignController;
 use App\Http\Controllers\Api\V1\VerifyController;
-use App\Http\Controllers\Api\ApiDocsController;
 use Illuminate\Support\Facades\Route;
 
 /*

@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
-use App\Models\Signature;
 use App\Helpers\StorageHelper;
+use App\Models\Signature;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class VerificationController extends Controller
@@ -17,17 +16,17 @@ class VerificationController extends Controller
         if (empty($token)) {
             return Inertia::render('Verify', [
                 'status' => 'error',
-                'message' => 'Token verifikasi tidak valid atau kosong.'
+                'message' => 'Token verifikasi tidak valid atau kosong.',
             ]);
         }
 
         $signature = Signature::with('user')->where('verify_code', $token)->first();
 
-        if (!$signature) {
+        if (! $signature) {
             return Inertia::render('Verify', [
                 'status' => 'error',
                 'token' => $token,
-                'message' => 'Dokumen dengan kode verifikasi tersebut tidak ditemukan di sistem kami.'
+                'message' => 'Dokumen dengan kode verifikasi tersebut tidak ditemukan di sistem kami.',
             ]);
         }
 
@@ -46,8 +45,8 @@ class VerificationController extends Controller
                 'user' => $signature->user ? [
                     'name' => $signature->user->name,
                     'position' => $signature->user->position ?? 'Staff',
-                ] : null
-            ]
+                ] : null,
+            ],
         ]);
     }
 }

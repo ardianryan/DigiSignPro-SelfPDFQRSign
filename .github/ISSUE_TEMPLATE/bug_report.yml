@@ -1,0 +1,68 @@
+name: 🐛 Bug Report
+description: Report a bug or unexpected behavior in DigiSign Pro
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+        *If this is a security vulnerability, please refer to our [Security Policy](https://github.com/ardianryan/DigiSignPro-SelfPDFQRSign/blob/main/SECURITY.md) instead of creating a public issue.*
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps To Reproduce
+      description: Steps to reproduce the behavior.
+      placeholder: |
+        1. Go to '/sign/single'
+        2. Upload sample PDF file
+        3. Click 'Tanda Tangani'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: A clear and concise description of what you expected to happen.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      description: What environment are you running DigiSign Pro on?
+      options:
+        - Linux VPS (Ubuntu / Debian / AlmaLinux)
+        - macOS (Local / Herd)
+        - Windows (WSL2 / Docker)
+        - Docker Container
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: php_version
+    attributes:
+      label: PHP Version
+      placeholder: "e.g. PHP 8.3.10"
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Log Output
+      description: Please copy and paste any relevant log snippets from `storage/logs/laravel.log` or browser console.
+      render: shell

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 
 #[Fillable(['name', 'email', 'password', 'role', 'position', 'signature_path', 'signature_prefix', 'api_key', 'api_key_created_at'])]
 #[Hidden(['password', 'remember_token', 'api_key'])]
@@ -38,7 +39,7 @@ class User extends Authenticatable
 
     public static function generateApiKey(): string
     {
-        return 'digi_'.\Illuminate\Support\Str::random(48);
+        return 'digi_'.Str::random(48);
     }
 
     public function ensureApiKey(): string

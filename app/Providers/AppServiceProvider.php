@@ -2,14 +2,14 @@
 
 namespace App\Providers;
 
+use App\Models\AppSetting;
+use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
-use App\Models\User;
-use App\Models\AppSetting;
 use Throwable;
 
 class AppServiceProvider extends ServiceProvider
@@ -44,7 +44,7 @@ class AppServiceProvider extends ServiceProvider
         // Apply timezone from app_settings when available
         try {
             $settings = AppSetting::query()->first();
-            if ($settings && !empty($settings->timezone)) {
+            if ($settings && ! empty($settings->timezone)) {
                 config(['app.timezone' => $settings->timezone]);
                 date_default_timezone_set($settings->timezone);
             }

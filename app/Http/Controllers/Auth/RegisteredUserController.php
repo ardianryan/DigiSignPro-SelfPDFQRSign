@@ -24,7 +24,7 @@ class RegisteredUserController extends Controller
     {
         $settings = AppSetting::first();
 
-        if ($settings && !$settings->registration_open) {
+        if ($settings && ! $settings->registration_open) {
             abort(403, 'Registrasi akun baru sedang ditutup. Hubungi administrator.');
         }
 
@@ -42,7 +42,7 @@ class RegisteredUserController extends Controller
     {
         $settings = AppSetting::first();
 
-        if ($settings && !$settings->registration_open) {
+        if ($settings && ! $settings->registration_open) {
             throw ValidationException::withMessages([
                 'email' => 'Registrasi akun baru sedang ditutup. Hubungi administrator.',
             ]);

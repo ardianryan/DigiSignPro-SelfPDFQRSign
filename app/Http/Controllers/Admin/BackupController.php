@@ -4,18 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-
-use App\Models\User;
-use App\Models\Signature;
-use App\Models\AppSetting;
-use Inertia\Inertia;
-use ZipArchive;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Log;
-use Throwable;
-use RecursiveIteratorIterator;
+use Illuminate\Support\Facades\Schema;
+use Inertia\Inertia;
 use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use Throwable;
+use ZipArchive;
 
 class BackupController extends Controller
 {
@@ -29,19 +25,19 @@ class BackupController extends Controller
         $backupDb = $request->boolean('backup_db', true);
         $backupMedia = $request->boolean('backup_media', true);
 
-        if (!$backupDb && !$backupMedia) {
+        if (! $backupDb && ! $backupMedia) {
             return redirect()->back()->withErrors(['error' => 'Pilih minimal satu opsi backup.']);
         }
 
-        $zip = new ZipArchive();
-        $filename = 'backup_digisign_' . date('Y-m-d_H-i-s') . '.zip';
+        $zip = new ZipArchive;
+        $filename = 'backup_digisign_'.date('Y-m-d_H-i-s').'.zip';
         $tempDir = storage_path('app/temp');
-        if (!file_exists($tempDir)) {
+        if (! file_exists($tempDir)) {
             mkdir($tempDir, 0777, true);
         }
-        $tempFile = $tempDir . '/' . $filename;
+        $tempFile = $tempDir.'/'.$filename;
 
-        if ($zip->open($tempFile, ZipArchive::CREATE) !== TRUE) {
+        if ($zip->open($tempFile, ZipArchive::CREATE) !== true) {
             return redirect()->back()->withErrors(['error' => 'Gagal membuat file ZIP.']);
         }
 
@@ -73,7 +69,7 @@ class BackupController extends Controller
                     }
                     $filePath = $file->getRealPath();
                     $relativePath = substr($filePath, strlen(realpath($uploadsDir)) + 1);
-                    $zip->addFile($filePath, "uploads/" . $relativePath);
+                    $zip->addFile($filePath, 'uploads/'.$relativePath);
                 }
             }
         }
@@ -94,17 +90,17 @@ class BackupController extends Controller
         $restoreDb = $request->boolean('restore_db');
         $restoreMedia = $request->boolean('restore_media');
 
-        if (!$restoreDb && !$restoreMedia) {
+        if (! $restoreDb && ! $restoreMedia) {
             return response()->json(['status' => 'error', 'message' => 'Pilih minimal satu opsi restore.']);
         }
 
-        $tempDir = storage_path('app/temp/restore_' . time());
-        if (!file_exists($tempDir)) {
+        $tempDir = storage_path('app/temp/restore_'.time());
+        if (! file_exists($tempDir)) {
             mkdir($tempDir, 0777, true);
         }
 
-        $zip = new ZipArchive();
-        if ($zip->open($request->file('backup_file')->getRealPath()) === TRUE) {
+        $zip = new ZipArchive;
+        if ($zip->open($request->file('backup_file')->getRealPath()) === true) {
             $zip->extractTo($tempDir);
             $zip->close();
         } else {
@@ -114,12 +110,12 @@ class BackupController extends Controller
         try {
             DB::beginTransaction();
 
-            if ($restoreDb && is_dir($tempDir . '/database')) {
+            if ($restoreDb && is_dir($tempDir.'/database')) {
                 Schema::disableForeignKeyConstraints();
 
                 $tables = ['users', 'signatures', 'app_settings'];
                 foreach ($tables as $table) {
-                    $jsonFile = $tempDir . "/database/{$table}.json";
+                    $jsonFile = $tempDir."/database/{$table}.json";
                     if (file_exists($jsonFile)) {
                         $data = json_decode(file_get_contents($jsonFile), true);
                         if ($data !== null) {
@@ -136,24 +132,24 @@ class BackupController extends Controller
 
             DB::commit();
 
-            if ($restoreMedia && is_dir($tempDir . '/uploads')) {
+            if ($restoreMedia && is_dir($tempDir.'/uploads')) {
                 $targetDir = storage_path('app/public/uploads');
-                if (!file_exists($targetDir)) {
+                if (! file_exists($targetDir)) {
                     mkdir($targetDir, 0777, true);
                 }
 
                 $files = new RecursiveIteratorIterator(
-                    new RecursiveDirectoryIterator($tempDir . '/uploads', RecursiveDirectoryIterator::SKIP_DOTS),
+                    new RecursiveDirectoryIterator($tempDir.'/uploads', RecursiveDirectoryIterator::SKIP_DOTS),
                     RecursiveIteratorIterator::LEAVES_ONLY
                 );
 
                 foreach ($files as $name => $file) {
                     $filePath = $file->getRealPath();
-                    $relativePath = substr($filePath, strlen(realpath($tempDir . '/uploads')) + 1);
-                    $destPath = $targetDir . '/' . $relativePath;
+                    $relativePath = substr($filePath, strlen(realpath($tempDir.'/uploads')) + 1);
+                    $destPath = $targetDir.'/'.$relativePath;
 
                     $destDir = dirname($destPath);
-                    if (!file_exists($destDir)) {
+                    if (! file_exists($destDir)) {
                         mkdir($destDir, 0777, true);
                     }
 
@@ -167,15 +163,18 @@ class BackupController extends Controller
 
         } catch (Throwable $e) {
             DB::rollBack();
-            Log::error("Restore Database error: " . $e->getMessage());
+            Log::error('Restore Database error: '.$e->getMessage());
             $this->cleanupDir($tempDir);
-            return response()->json(['status' => 'error', 'message' => 'Restore gagal: ' . $e->getMessage()]);
+
+            return response()->json(['status' => 'error', 'message' => 'Restore gagal: '.$e->getMessage()]);
         }
     }
 
     private function cleanupDir($dir)
     {
-        if (!is_dir($dir)) return;
+        if (! is_dir($dir)) {
+            return;
+        }
         $files = array_diff(scandir($dir), ['.', '..']);
         foreach ($files as $file) {
             (is_dir("$dir/$file")) ? $this->cleanupDir("$dir/$file") : unlink("$dir/$file");

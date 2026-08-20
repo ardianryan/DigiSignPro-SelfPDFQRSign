@@ -3,12 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-
 use App\Models\AppSetting;
-use Inertia\Inertia;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 use Throwable;
 
 class SettingController extends Controller
@@ -33,7 +32,7 @@ class SettingController extends Controller
                 if ($item === '.' || $item === '..') {
                     continue;
                 }
-                $path = $dir . DIRECTORY_SEPARATOR . $item;
+                $path = $dir.DIRECTORY_SEPARATOR.$item;
                 if (is_dir($path)) {
                     $walk($path);
                 } elseif (is_file($path)) {
@@ -53,8 +52,8 @@ class SettingController extends Controller
             'file_count' => $fileCount,
             'size_bytes' => $totalBytes,
             'size_human' => $mb >= 1
-                ? number_format($mb, 2) . ' MB'
-                : number_format($totalBytes / 1024, 1) . ' KB',
+                ? number_format($mb, 2).' MB'
+                : number_format($totalBytes / 1024, 1).' KB',
             'paths' => $this->tempDirectories(),
         ];
     }
@@ -69,7 +68,7 @@ class SettingController extends Controller
 
     public function update(Request $request)
     {
-        $settings = AppSetting::first() ?: new AppSetting();
+        $settings = AppSetting::first() ?: new AppSetting;
 
         $request->validate([
             'app_name' => 'required|string|max:255',
@@ -98,7 +97,7 @@ class SettingController extends Controller
         $settings->max_prefix_length = (int) $request->input('max_prefix_length');
         $settings->timezone = $request->input('timezone');
         $settings->storage_mode = $request->input('storage_mode');
-        
+
         $settings->s3_bucket = $request->input('s3_bucket');
         $settings->s3_region = $request->input('s3_region');
         $settings->s3_access_key = $request->input('s3_access_key');
@@ -112,7 +111,7 @@ class SettingController extends Controller
                 Storage::disk('public')->delete(str_replace('storage/', '', $settings->app_logo));
             }
             $path = $request->file('app_logo')->store('uploads/logo', 'public');
-            $settings->app_logo = 'storage/' . $path;
+            $settings->app_logo = 'storage/'.$path;
         }
 
         $settings->save();
@@ -131,6 +130,7 @@ class SettingController extends Controller
             $settings->app_logo = null;
             $settings->save();
         }
+
         return redirect()->back()->with('success', 'Logo berhasil dihapus.');
     }
 
@@ -152,24 +152,25 @@ class SettingController extends Controller
                 'filesystems.disks.s3_test.region' => $request->input('s3_region'),
                 'filesystems.disks.s3_test.bucket' => $request->input('s3_bucket'),
                 'filesystems.disks.s3_test.endpoint' => $request->input('s3_endpoint') ?: null,
-                'filesystems.disks.s3_test.use_path_style_endpoint' => !empty($request->input('s3_endpoint')),
+                'filesystems.disks.s3_test.use_path_style_endpoint' => ! empty($request->input('s3_endpoint')),
             ]);
 
-            $testFilename = 's3_test_' . uniqid() . '.txt';
+            $testFilename = 's3_test_'.uniqid().'.txt';
             Storage::disk('s3_test')->put($testFilename, 'Connection Test Success');
             Storage::disk('s3_test')->delete($testFilename);
 
             return response()->json(['status' => 'success', 'message' => 'Koneksi S3 berhasil terhubung!']);
         } catch (Throwable $e) {
-            Log::error("S3 Test Connection Failed: " . $e->getMessage());
-            return response()->json(['status' => 'error', 'message' => 'Gagal terhubung ke S3: ' . $e->getMessage()]);
+            Log::error('S3 Test Connection Failed: '.$e->getMessage());
+
+            return response()->json(['status' => 'error', 'message' => 'Gagal terhubung ke S3: '.$e->getMessage()]);
         }
     }
 
     public function clearTemp()
     {
         $deleteTree = function (string $dir) use (&$deleteTree) {
-            if (!is_dir($dir)) {
+            if (! is_dir($dir)) {
                 return;
             }
             $items = @scandir($dir) ?: [];
@@ -177,7 +178,7 @@ class SettingController extends Controller
                 if ($item === '.' || $item === '..') {
                     continue;
                 }
-                $path = $dir . DIRECTORY_SEPARATOR . $item;
+                $path = $dir.DIRECTORY_SEPARATOR.$item;
                 if (is_dir($path)) {
                     $deleteTree($path);
                     @rmdir($path);
@@ -190,13 +191,13 @@ class SettingController extends Controller
         foreach ($this->tempDirectories() as $dir) {
             $deleteTree($dir);
             // recreate empty temp root
-            if (!is_dir($dir)) {
+            if (! is_dir($dir)) {
                 @mkdir($dir, 0775, true);
             }
         }
 
         // Also ensure storage/app/temp exists after clean
-        if (!is_dir(storage_path('app/temp'))) {
+        if (! is_dir(storage_path('app/temp'))) {
             @mkdir(storage_path('app/temp'), 0775, true);
         }
 
