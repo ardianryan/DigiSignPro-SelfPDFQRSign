@@ -77,6 +77,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/watermark', [PdfToolController::class, 'watermark'])->name('watermark');
         Route::get('/page-number', [PdfToolController::class, 'pageNumber'])->name('page_number');
         Route::get('/protect', [PdfToolController::class, 'protect'])->name('protect');
+        Route::post('/track-usage', [PdfToolController::class, 'trackUsage'])->name('track_usage');
     });
 
     // 3. Admin-only routes

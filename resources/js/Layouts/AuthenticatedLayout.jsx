@@ -206,15 +206,6 @@ export default function AuthenticatedLayout({ header, children }) {
                         {openMenus.includes('pdftools') && (
                             <div className="pl-12 space-y-1">
                                 <Link
-                                    href={route('tools.index')}
-                                    onClick={() => setSidebarOpen(false)}
-                                    className={`block py-2 text-sm transition-colors ${
-                                        route().current('tools.index') ? 'text-purple-400 font-medium' : 'text-slate-500 hover:text-white'
-                                    }`}
-                                >
-                                    Bento Tool Hub
-                                </Link>
-                                <Link
                                     href={route('tools.merge')}
                                     onClick={() => setSidebarOpen(false)}
                                     className={`block py-2 text-sm transition-colors ${

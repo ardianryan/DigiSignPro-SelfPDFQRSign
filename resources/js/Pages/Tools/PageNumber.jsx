@@ -69,6 +69,16 @@ export default function PageNumberPdf({ auth }) {
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
+            fetch(route('tools.track_usage'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ tool: 'page_number', files_count: 1 }),
+            }).catch(() => {});
+
             Swal.fire('Berhasil!', 'Nomor halaman telah berhasil disisipkan.', 'success');
         } catch (err) {
             console.error(err);

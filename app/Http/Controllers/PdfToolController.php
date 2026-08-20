@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ToolUsage;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -69,5 +72,24 @@ class PdfToolController extends Controller
     public function protect(): Response
     {
         return Inertia::render('Tools/Protect');
+    }
+
+    /**
+     * Track usage telemetry for PDF Tools.
+     */
+    public function trackUsage(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'tool' => 'required|string|in:merge,split,organize,image_to_pdf,watermark,page_number,protect',
+            'files_count' => 'nullable|integer|min:1|max:500',
+        ]);
+
+        ToolUsage::create([
+            'user_id' => $request->user()?->id,
+            'tool_name' => $validated['tool'],
+            'files_count' => $validated['files_count'] ?? 1,
+        ]);
+
+        return response()->json(['status' => 'success']);
     }
 }

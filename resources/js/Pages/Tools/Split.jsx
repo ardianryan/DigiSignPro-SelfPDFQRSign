@@ -81,6 +81,16 @@ export default function SplitPdf({ auth }) {
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
 
+                fetch(route('tools.track_usage'), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ tool: 'split', files_count: 1 }),
+                }).catch(() => {});
+
                 Swal.fire('Berhasil!', 'Halaman yang diekstrak telah terunduh langsung ke perangkat Anda.', 'success');
             } else {
                 // Split each page into individual PDFs (download sequentially)
@@ -101,6 +111,16 @@ export default function SplitPdf({ auth }) {
                     document.body.removeChild(a);
                     URL.revokeObjectURL(url);
                 }
+
+                fetch(route('tools.track_usage'), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ tool: 'split', files_count: pageCount }),
+                }).catch(() => {});
 
                 Swal.fire('Selesai!', `${pageCount} file PDF terpisah telah berhasil diunduh.`, 'success');
             }

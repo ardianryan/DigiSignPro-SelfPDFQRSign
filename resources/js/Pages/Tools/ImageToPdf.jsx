@@ -97,6 +97,16 @@ export default function ImageToPdf({ auth }) {
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
+            fetch(route('tools.track_usage'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ tool: 'image_to_pdf', files_count: images.length }),
+            }).catch(() => {});
+
             Swal.fire('Berhasil!', 'File PDF hasil konversi gambar telah terunduh.', 'success');
         } catch (err) {
             console.error(err);

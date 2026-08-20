@@ -97,6 +97,16 @@ export default function OrganizePdf({ auth }) {
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
+            fetch(route('tools.track_usage'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ tool: 'organize', files_count: 1 }),
+            }).catch(() => {});
+
             Swal.fire('Berhasil!', 'Susunan halaman PDF baru telah diunduh.', 'success');
         } catch (err) {
             console.error(err);

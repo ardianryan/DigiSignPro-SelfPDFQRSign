@@ -22,7 +22,7 @@ return new class extends Migration
                 Schema::table('signatures', function (Blueprint $table) {
                     $table->string('document_name')->nullable()->change();
                 });
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 // doctrine/dbal may be missing — adapter already filled nulls
             }
         }

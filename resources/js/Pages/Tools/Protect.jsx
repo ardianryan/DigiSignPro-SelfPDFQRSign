@@ -49,6 +49,16 @@ export default function ProtectPdf({ auth }) {
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
+            fetch(route('tools.track_usage'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ tool: 'protect', files_count: 1 }),
+            }).catch(() => {});
+
             Swal.fire({
                 title: 'Berhasil Diproteksi!',
                 text: 'Dokumen PDF Anda telah berhasil dienkripsi dan diunduh.',

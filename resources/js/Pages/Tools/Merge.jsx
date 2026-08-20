@@ -68,6 +68,17 @@ export default function MergePdf({ auth }) {
             document.body.removeChild(downloadLink);
             URL.revokeObjectURL(url);
 
+            // Silent telemetry usage tracking
+            fetch(route('tools.track_usage'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ tool: 'merge', files_count: files.length }),
+            }).catch(() => {});
+
             Swal.fire({
                 title: 'Berhasil Digabung!',
                 text: 'File PDF hasil penggabungan telah otomatis terunduh langsung dari browser Anda.',

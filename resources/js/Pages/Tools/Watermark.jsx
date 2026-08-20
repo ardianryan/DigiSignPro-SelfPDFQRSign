@@ -67,6 +67,16 @@ export default function WatermarkPdf({ auth }) {
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
+            fetch(route('tools.track_usage'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ tool: 'watermark', files_count: 1 }),
+            }).catch(() => {});
+
             Swal.fire('Berhasil!', 'File PDF dengan watermark telah terunduh.', 'success');
         } catch (err) {
             console.error(err);
