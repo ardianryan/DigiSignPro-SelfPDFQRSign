@@ -54,7 +54,7 @@ export default function Single({ auth, max_upload_size }) {
     const handleFile = (selectedFile) => {
         if (!selectedFile) return;
 
-        if (selectedFile.type !== 'application/pdf') {
+        if (!selectedFile.name.toLowerCase().endsWith('.pdf') && selectedFile.type !== 'application/pdf') {
             Swal.fire('Error', 'File harus berformat PDF.', 'error');
             return;
         }
@@ -187,7 +187,13 @@ export default function Single({ auth, max_upload_size }) {
         setIsDraggingFile(true);
     };
 
-    const handleDragLeave = () => {
+    const handleDragEnter = (e) => {
+        e.preventDefault();
+        setIsDraggingFile(true);
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
         setIsDraggingFile(false);
     };
 
@@ -379,26 +385,26 @@ export default function Single({ auth, max_upload_size }) {
                         
                         {/* Step 1: Upload Area */}
                         {!pdfLoaded && (
-                            <div
+                            <label
                                 onDragOver={handleDragOver}
+                                onDragEnter={handleDragEnter}
                                 onDragLeave={handleDragLeave}
                                 onDrop={handleDrop}
-                                className={`text-center py-20 border-2 border-dashed rounded-xl transition-colors mb-6 cursor-pointer ${
+                                className={`block text-center py-20 border-2 border-dashed rounded-xl transition-colors mb-6 cursor-pointer ${
                                     isDraggingFile
-                                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                                        : 'border-slate-300 dark:border-gray-600 bg-slate-50 dark:bg-gray-700/50'
+                                        ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-900/20'
+                                        : 'border-slate-300 dark:border-gray-600 bg-slate-50 dark:bg-gray-700/50 hover:border-blue-500'
                                 }`}
                             >
                                 <svg className="mx-auto h-12 w-12 text-slate-400 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                                 </svg>
-                                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Drag & drop file PDF di sini, atau</p>
-                                <label className="mt-4 inline-block px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg cursor-pointer transition-colors font-medium">
-                                    Pilih File
-                                    <input type="file" accept="application/pdf" className="hidden" onChange={(e) => handleFile(e.target.files[0])} />
-                                </label>
-                                <p className="mt-2 text-xs text-slate-400 dark:text-gray-400">Maksimal {maxMb}MB. Format PDF.</p>
-                            </div>
+                                <p className="mt-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
+                                    {isDraggingFile ? 'Lepaskan Berkas PDF di Sini' : 'Tarik & Letakkan Berkas PDF di Sini atau Klik untuk Memilih'}
+                                </p>
+                                <p className="mt-1 text-xs text-slate-400 dark:text-gray-400">Maksimal {maxMb}MB. Format PDF.</p>
+                                <input type="file" accept="application/pdf" className="hidden" onChange={(e) => handleFile(e.target.files[0])} />
+                            </label>
                         )}
 
                         {/* Step 2: Editor Preview */}

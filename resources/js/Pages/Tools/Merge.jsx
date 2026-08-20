@@ -6,15 +6,30 @@ import Swal from 'sweetalert2';
 
 export default function MergePdf({ auth }) {
     const [files, setFiles] = useState([]);
+    const [isDraggingFile, setIsDraggingFile] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
 
-    const handleFileChange = (e) => {
-        const selected = Array.from(e.target.files).filter(f => f.type === 'application/pdf');
+    const addPdfFiles = (incomingFiles) => {
+        const selected = Array.from(incomingFiles).filter(f => f.type === 'application/pdf' || f.name.endsWith('.pdf'));
         if (selected.length === 0) {
             Swal.fire('Format Salah', 'Silakan pilih file dengan format PDF saja.', 'warning');
             return;
         }
         setFiles(prev => [...prev, ...selected]);
+    };
+
+    const handleFileChange = (e) => {
+        if (e.target.files) {
+            addPdfFiles(e.target.files);
+        }
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setIsDraggingFile(false);
+        if (e.dataTransfer.files) {
+            addPdfFiles(e.dataTransfer.files);
+        }
     };
 
     const removeFile = (index) => {
@@ -121,14 +136,33 @@ export default function MergePdf({ auth }) {
 
                     {/* Upload Dropzone */}
                     <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-slate-200 dark:border-gray-700 shadow-sm mb-6">
-                        <label className="border-2 border-dashed border-slate-300 dark:border-gray-600 hover:border-blue-500 rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-colors text-center">
+                        <label
+                            onDragOver={(e) => {
+                                e.preventDefault();
+                                setIsDraggingFile(true);
+                            }}
+                            onDragEnter={(e) => {
+                                e.preventDefault();
+                                setIsDraggingFile(true);
+                            }}
+                            onDragLeave={(e) => {
+                                e.preventDefault();
+                                setIsDraggingFile(false);
+                            }}
+                            onDrop={handleDrop}
+                            className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-colors text-center ${
+                                isDraggingFile
+                                    ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-900/20'
+                                    : 'border-slate-300 dark:border-gray-600 hover:border-blue-500'
+                            }`}
+                        >
                             <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-3">
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                                 </svg>
                             </div>
                             <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                                Klik untuk memilih file PDF atau drag file ke sini
+                                {isDraggingFile ? 'Lepaskan Berkas PDF di Sini' : 'Klik untuk memilih file PDF atau drag file ke sini'}
                             </span>
                             <span className="text-xs text-slate-400 mt-1">Dapat memilih lebih dari 1 file sekaligus</span>
                             <input type="file" multiple accept="application/pdf" onChange={handleFileChange} className="hidden" />

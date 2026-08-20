@@ -11,6 +11,7 @@ export default function Bulk({ auth, max_upload_size_bulk }) {
     const [previewFilename, setPreviewFilename] = useState('');
     const [pageNum, setPageNum] = useState(1);
     const [totalPage, setTotalPage] = useState(0);
+    const [isDraggingFile, setIsDraggingFile] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
 
@@ -49,10 +50,33 @@ export default function Bulk({ auth, max_upload_size_bulk }) {
         document.body.appendChild(script);
     }, []);
 
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        setIsDraggingFile(true);
+    };
+
+    const handleDragEnter = (e) => {
+        e.preventDefault();
+        setIsDraggingFile(true);
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        setIsDraggingFile(false);
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setIsDraggingFile(false);
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            uploadZip(e.dataTransfer.files[0]);
+        }
+    };
+
     const uploadZip = async (selectedFile) => {
         if (!selectedFile) return;
 
-        if (!selectedFile.name.endsWith('.zip') && selectedFile.type !== 'application/zip' && selectedFile.type !== 'application/x-zip-compressed') {
+        if (!selectedFile.name.toLowerCase().endsWith('.zip') && selectedFile.type !== 'application/zip' && selectedFile.type !== 'application/x-zip-compressed') {
             Swal.fire('Error', 'File harus berupa arsip ZIP.', 'error');
             return;
         }
@@ -356,17 +380,26 @@ export default function Bulk({ auth, max_upload_size_bulk }) {
                         
                         {/* Step 1: ZIP Upload */}
                         {!zipLoaded && (
-                            <div className="text-center py-20 border-2 border-dashed border-slate-300 dark:border-gray-600 bg-slate-50 dark:bg-gray-700/50 rounded-xl">
+                            <label
+                                onDragOver={handleDragOver}
+                                onDragEnter={handleDragEnter}
+                                onDragLeave={handleDragLeave}
+                                onDrop={handleDrop}
+                                className={`block text-center py-20 border-2 border-dashed rounded-xl transition-colors cursor-pointer ${
+                                    isDraggingFile
+                                        ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-900/20'
+                                        : 'border-slate-300 dark:border-gray-600 bg-slate-50 dark:bg-gray-700/50 hover:border-blue-500'
+                                }`}
+                            >
                                 <svg className="mx-auto h-12 w-12 text-slate-400 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20"></path>
                                 </svg>
-                                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Pilih berkas ZIP untuk diunggah</p>
-                                <label className="mt-4 inline-block px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg cursor-pointer transition-colors font-medium">
-                                    Pilih File ZIP
-                                    <input type="file" accept=".zip" className="hidden" onChange={(e) => uploadZip(e.target.files[0])} />
-                                </label>
-                                <p className="mt-2 text-xs text-slate-400 dark:text-gray-400">Maksimal {maxMb}MB. Format ZIP berisi file PDF.</p>
-                            </div>
+                                <p className="mt-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
+                                    {isDraggingFile ? 'Lepaskan Berkas ZIP di Sini' : 'Tarik & Letakkan Berkas ZIP di Sini atau Klik untuk Memilih'}
+                                </p>
+                                <p className="mt-1 text-xs text-slate-400 dark:text-gray-400">Maksimal {maxMb}MB. Format ZIP berisi file PDF.</p>
+                                <input type="file" accept=".zip,application/zip,application/x-zip-compressed" className="hidden" onChange={(e) => uploadZip(e.target.files[0])} />
+                            </label>
                         )}
 
                         {/* Step 2: Editor Preview */}

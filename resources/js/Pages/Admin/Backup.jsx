@@ -15,7 +15,7 @@ export default function Backup({ auth }) {
     const [restoreFileName, setRestoreFileName] = useState('');
     const [restoreDbCheck, setRestoreDbCheck] = useState(true);
     const [restoreMediaCheck, setRestoreMediaCheck] = useState(true);
-    const [isRestoring, setIsRestoring] = useState(false);
+    const [isDraggingFile, setIsDraggingFile] = useState(false);
 
     const handleBackupSubmit = (e) => {
         if (!backupDb && !backupMedia) {
@@ -24,11 +24,26 @@ export default function Backup({ auth }) {
         }
     };
 
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
+    const processFile = (file) => {
+        if (file && (file.name.toLowerCase().endsWith('.zip') || file.type === 'application/zip')) {
             setRestoreFile(file);
             setRestoreFileName(file.name);
+        } else {
+            Swal.fire('Format Salah', 'Pilih file backup dengan format .zip.', 'warning');
+        }
+    };
+
+    const handleFileChange = (e) => {
+        if (e.target.files && e.target.files[0]) {
+            processFile(e.target.files[0]);
+        }
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setIsDraggingFile(false);
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            processFile(e.dataTransfer.files[0]);
         }
     };
 
@@ -216,7 +231,27 @@ export default function Backup({ auth }) {
                             </div>
 
                             <form onSubmit={handleRestoreSubmit} className="space-y-4">
-                                <div className="border-2 border-dashed border-slate-300 dark:border-gray-600 rounded-lg p-6 text-center hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors">
+                                <label
+                                    htmlFor="restore_file_input"
+                                    onDragOver={(e) => {
+                                        e.preventDefault();
+                                        setIsDraggingFile(true);
+                                    }}
+                                    onDragEnter={(e) => {
+                                        e.preventDefault();
+                                        setIsDraggingFile(true);
+                                    }}
+                                    onDragLeave={(e) => {
+                                        e.preventDefault();
+                                        setIsDraggingFile(false);
+                                    }}
+                                    onDrop={handleDrop}
+                                    className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer flex flex-col items-center transition-colors ${
+                                        isDraggingFile
+                                            ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-900/20'
+                                            : 'border-slate-300 dark:border-gray-600 hover:bg-slate-50 dark:hover:bg-gray-700 hover:border-blue-500'
+                                    }`}
+                                >
                                     <input
                                         type="file"
                                         id="restore_file_input"
@@ -224,16 +259,14 @@ export default function Backup({ auth }) {
                                         className="hidden"
                                         onChange={handleFileChange}
                                     />
-                                    <label htmlFor="restore_file_input" className="cursor-pointer flex flex-col items-center">
-                                        <svg className="w-12 h-12 text-slate-400 dark:text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
-                                        </svg>
-                                        <span className="text-blue-600 dark:text-blue-400 font-semibold hover:underline text-sm">
-                                            {restoreFileName || 'Pilih File Backup (.zip)'}
-                                        </span>
-                                        <span className="text-xs text-slate-400 dark:text-gray-500 mt-1">Hanya file berekstensi .zip hasil ekspor sistem</span>
-                                    </label>
-                                </div>
+                                    <svg className="w-12 h-12 text-slate-400 dark:text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                                    </svg>
+                                    <span className="text-blue-600 dark:text-blue-400 font-semibold hover:underline text-sm">
+                                        {isDraggingFile ? 'Lepaskan Berkas Backup di Sini' : (restoreFileName || 'Pilih atau Tarik Berkas Backup (.zip) ke Sini')}
+                                    </span>
+                                    <span className="text-xs text-slate-400 dark:text-gray-500 mt-1">Hanya file berekstensi .zip hasil ekspor sistem</span>
+                                </label>
 
                                 {restoreFile && (
                                     <div className="space-y-3 p-4 bg-slate-50 dark:bg-gray-700/50 rounded-lg border border-slate-200 dark:border-gray-600">

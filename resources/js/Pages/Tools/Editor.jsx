@@ -43,9 +43,9 @@ export default function VisualPdfEditor({ auth }) {
         document.body.appendChild(script);
     }, []);
 
-    // Load PDF
-    const handleFileChange = async (e) => {
-        const selected = e.target.files[0];
+    const [isDraggingFile, setIsDraggingFile] = useState(false);
+
+    const processPdfFile = async (selected) => {
         if (!selected || selected.type !== 'application/pdf') {
             Swal.fire('Format Salah', 'Pilih file PDF yang valid.', 'warning');
             return;
@@ -70,6 +70,21 @@ export default function VisualPdfEditor({ auth }) {
         } catch (err) {
             console.error('PDF load error:', err);
             Swal.fire('Gagal', 'Tidak dapat memuat berkas PDF.', 'error');
+        }
+    };
+
+    // Load PDF via input change
+    const handleFileChange = (e) => {
+        if (e.target.files && e.target.files[0]) {
+            processPdfFile(e.target.files[0]);
+        }
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setIsDraggingFile(false);
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            processPdfFile(e.dataTransfer.files[0]);
         }
     };
 
@@ -368,14 +383,33 @@ export default function VisualPdfEditor({ auth }) {
                 <div className="mx-auto max-w-7xl">
                     {!file ? (
                         <div className="bg-white dark:bg-gray-800 rounded-2xl p-10 border border-slate-200 dark:border-gray-700 shadow-xs text-center max-w-2xl mx-auto">
-                            <label className="border-2 border-dashed border-slate-300 dark:border-gray-600 hover:border-blue-500 rounded-xl p-10 flex flex-col items-center justify-center cursor-pointer transition-colors">
+                            <label
+                                onDragOver={(e) => {
+                                    e.preventDefault();
+                                    setIsDraggingFile(true);
+                                }}
+                                onDragEnter={(e) => {
+                                    e.preventDefault();
+                                    setIsDraggingFile(true);
+                                }}
+                                onDragLeave={(e) => {
+                                    e.preventDefault();
+                                    setIsDraggingFile(false);
+                                }}
+                                onDrop={handleDrop}
+                                className={`border-2 border-dashed rounded-xl p-10 flex flex-col items-center justify-center cursor-pointer transition-colors ${
+                                    isDraggingFile
+                                        ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-900/20'
+                                        : 'border-slate-300 dark:border-gray-600 hover:border-blue-500'
+                                }`}
+                            >
                                 <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-3">
                                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
                                     </svg>
                                 </div>
                                 <h3 className="text-sm font-bold text-slate-800 dark:text-white">
-                                    Pilih Berkas PDF untuk Diedit
+                                    {isDraggingFile ? 'Lepaskan Berkas PDF di Sini' : 'Pilih atau Tarik Berkas PDF ke Sini'}
                                 </h3>
                                 <p className="text-xs text-slate-500 mt-1 max-w-md">
                                     Tambahkan teks baru, tempel gambar stempel/tanda tangan, tutup teks lama (whiteout), atau buat coretan.

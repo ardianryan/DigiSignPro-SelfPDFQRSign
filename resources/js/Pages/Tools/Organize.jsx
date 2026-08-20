@@ -6,12 +6,12 @@ import Swal from 'sweetalert2';
 
 export default function OrganizePdf({ auth }) {
     const [file, setFile] = useState(null);
+    const [isDraggingFile, setIsDraggingFile] = useState(false);
     const [pages, setPages] = useState([]); // [{ originalIndex: 0, rotation: 0, id: '1' }]
     const [isProcessing, setIsProcessing] = useState(false);
 
-    const handleFileChange = async (e) => {
-        const selected = e.target.files[0];
-        if (!selected || selected.type !== 'application/pdf') {
+    const processPdf = async (selected) => {
+        if (!selected || (selected.type !== 'application/pdf' && !selected.name.endsWith('.pdf'))) {
             Swal.fire('Format Salah', 'Pilih file PDF yang valid.', 'warning');
             return;
         }
@@ -34,6 +34,20 @@ export default function OrganizePdf({ auth }) {
             setPages(initialPages);
         } catch (err) {
             Swal.fire('Error', 'Gagal memuat struktur halaman PDF.', 'error');
+        }
+    };
+
+    const handleFileChange = (e) => {
+        if (e.target.files && e.target.files[0]) {
+            processPdf(e.target.files[0]);
+        }
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setIsDraggingFile(false);
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            processPdf(e.dataTransfer.files[0]);
         }
     };
 
@@ -144,14 +158,33 @@ export default function OrganizePdf({ auth }) {
 
                     {!file ? (
                         <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 border border-slate-200 dark:border-gray-700 shadow-sm text-center">
-                            <label className="border-2 border-dashed border-slate-300 dark:border-gray-600 hover:border-emerald-500 rounded-xl p-10 flex flex-col items-center justify-center cursor-pointer transition-colors">
-                                <div className="w-14 h-14 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-3">
+                            <label
+                                onDragOver={(e) => {
+                                    e.preventDefault();
+                                    setIsDraggingFile(true);
+                                }}
+                                onDragEnter={(e) => {
+                                    e.preventDefault();
+                                    setIsDraggingFile(true);
+                                }}
+                                onDragLeave={(e) => {
+                                    e.preventDefault();
+                                    setIsDraggingFile(false);
+                                }}
+                                onDrop={handleDrop}
+                                className={`border-2 border-dashed rounded-xl p-10 flex flex-col items-center justify-center cursor-pointer transition-colors ${
+                                    isDraggingFile
+                                        ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-900/20'
+                                        : 'border-slate-300 dark:border-gray-600 hover:border-blue-500'
+                                }`}
+                            >
+                                <div className="w-14 h-14 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-3">
                                     <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                                     </svg>
                                 </div>
                                 <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                                    Pilih File PDF untuk Diatur Ulang
+                                    {isDraggingFile ? 'Lepaskan Berkas PDF di Sini' : 'Pilih atau Tarik Berkas PDF ke Sini'}
                                 </span>
                                 <span className="text-xs text-slate-400 mt-1">Dapat memutar sudut, menghapus, atau memindahkan urutan halaman</span>
                                 <input type="file" accept="application/pdf" onChange={handleFileChange} className="hidden" />

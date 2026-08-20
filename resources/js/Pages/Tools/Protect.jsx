@@ -6,17 +6,31 @@ import Swal from 'sweetalert2';
 
 export default function ProtectPdf({ auth }) {
     const [file, setFile] = useState(null);
+    const [isDraggingFile, setIsDraggingFile] = useState(false);
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
 
-    const handleFileChange = (e) => {
-        const selected = e.target.files[0];
-        if (!selected || selected.type !== 'application/pdf') {
+    const processPdf = (selected) => {
+        if (!selected || (selected.type !== 'application/pdf' && !selected.name.endsWith('.pdf'))) {
             Swal.fire('Format Salah', 'Pilih file PDF yang valid.', 'warning');
             return;
         }
         setFile(selected);
+    };
+
+    const handleFileChange = (e) => {
+        if (e.target.files && e.target.files[0]) {
+            processPdf(e.target.files[0]);
+        }
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setIsDraggingFile(false);
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            processPdf(e.dataTransfer.files[0]);
+        }
     };
 
     const handleProtect = async () => {
@@ -101,14 +115,33 @@ export default function ProtectPdf({ auth }) {
 
                     {!file ? (
                         <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 border border-slate-200 dark:border-gray-700 shadow-sm text-center">
-                            <label className="border-2 border-dashed border-slate-300 dark:border-gray-600 hover:border-rose-500 rounded-xl p-10 flex flex-col items-center justify-center cursor-pointer transition-colors">
-                                <div className="w-14 h-14 rounded-full bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-3">
+                            <label
+                                onDragOver={(e) => {
+                                    e.preventDefault();
+                                    setIsDraggingFile(true);
+                                }}
+                                onDragEnter={(e) => {
+                                    e.preventDefault();
+                                    setIsDraggingFile(true);
+                                }}
+                                onDragLeave={(e) => {
+                                    e.preventDefault();
+                                    setIsDraggingFile(false);
+                                }}
+                                onDrop={handleDrop}
+                                className={`border-2 border-dashed rounded-xl p-10 flex flex-col items-center justify-center cursor-pointer transition-colors ${
+                                    isDraggingFile
+                                        ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-900/20'
+                                        : 'border-slate-300 dark:border-gray-600 hover:border-blue-500'
+                                }`}
+                            >
+                                <div className="w-14 h-14 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-3">
                                     <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                                     </svg>
                                 </div>
                                 <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                                    Pilih File PDF untuk Diberi Password
+                                    {isDraggingFile ? 'Lepaskan Berkas PDF di Sini' : 'Pilih atau Tarik Berkas PDF ke Sini'}
                                 </span>
                                 <input type="file" accept="application/pdf" onChange={handleFileChange} className="hidden" />
                             </label>

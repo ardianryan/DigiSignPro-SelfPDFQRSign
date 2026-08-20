@@ -6,12 +6,13 @@ import Swal from 'sweetalert2';
 
 export default function ImageToPdf({ auth }) {
     const [images, setImages] = useState([]);
+    const [isDraggingFile, setIsDraggingFile] = useState(false);
     const [pageSize, setPageSize] = useState('A4'); // 'A4', 'Letter', 'Fit'
     const [orientation, setOrientation] = useState('portrait'); // 'portrait', 'landscape'
     const [isProcessing, setIsProcessing] = useState(false);
 
-    const handleFileChange = (e) => {
-        const selected = Array.from(e.target.files).filter(f => f.type.startsWith('image/'));
+    const addImages = (incomingFiles) => {
+        const selected = Array.from(incomingFiles).filter(f => f.type.startsWith('image/'));
         if (selected.length === 0) {
             Swal.fire('Format Salah', 'Pilih file gambar (JPG, PNG, WebP).', 'warning');
             return;
@@ -24,6 +25,20 @@ export default function ImageToPdf({ auth }) {
         }));
 
         setImages(prev => [...prev, ...newItems]);
+    };
+
+    const handleFileChange = (e) => {
+        if (e.target.files) {
+            addImages(e.target.files);
+        }
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setIsDraggingFile(false);
+        if (e.dataTransfer.files) {
+            addImages(e.dataTransfer.files);
+        }
     };
 
     const removeImage = (index) => {
@@ -144,14 +159,33 @@ export default function ImageToPdf({ auth }) {
 
                     {/* Upload Dropzone */}
                     <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-slate-200 dark:border-gray-700 shadow-sm mb-6">
-                        <label className="border-2 border-dashed border-slate-300 dark:border-gray-600 hover:border-amber-500 rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-colors text-center">
-                            <div className="w-12 h-12 rounded-full bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-3">
+                        <label
+                            onDragOver={(e) => {
+                                e.preventDefault();
+                                setIsDraggingFile(true);
+                            }}
+                            onDragEnter={(e) => {
+                                e.preventDefault();
+                                setIsDraggingFile(true);
+                            }}
+                            onDragLeave={(e) => {
+                                e.preventDefault();
+                                setIsDraggingFile(false);
+                            }}
+                            onDrop={handleDrop}
+                            className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-colors text-center ${
+                                isDraggingFile
+                                    ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-900/20'
+                                    : 'border-slate-300 dark:border-gray-600 hover:border-blue-500'
+                            }`}
+                        >
+                            <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-3">
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                 </svg>
                             </div>
                             <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                                Pilih Gambar (JPG / PNG / WebP)
+                                {isDraggingFile ? 'Lepaskan Gambar di Sini' : 'Pilih atau Tarik Gambar (JPG / PNG / WebP) ke Sini'}
                             </span>
                             <span className="text-xs text-slate-400 mt-1">Dapat memilih banyak gambar sekaligus untuk digabung ke 1 PDF</span>
                             <input type="file" multiple accept="image/*" onChange={handleFileChange} className="hidden" />
