@@ -214,9 +214,10 @@ class BulkSignController extends Controller
                     for ($p = 1; $p <= $pageCount; $p++) {
                         $tplId = $pdf->importPage($p);
                         $size = $pdf->getTemplateSize($tplId);
+                        $orientation = ($size['width'] > $size['height']) ? 'L' : 'P';
 
-                        $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
-                        $pdf->useTemplate($tplId);
+                        $pdf->AddPage($orientation, [$size['width'], $size['height']]);
+                        $pdf->useTemplate($tplId, 0, 0, $size['width'], $size['height'], true);
 
                         if ($p === $targetPage) {
                             $qrSize = 25;
