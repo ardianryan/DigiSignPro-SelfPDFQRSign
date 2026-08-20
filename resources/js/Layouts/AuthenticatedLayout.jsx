@@ -192,7 +192,6 @@ export default function AuthenticatedLayout({ header, children }) {
                                 <span className="text-sm font-medium">PDF Tools Suite</span>
                             </div>
                             <div className="flex items-center">
-                                <span className="text-[10px] bg-purple-900/60 text-purple-300 font-semibold px-1.5 py-0.5 rounded border border-purple-700/50 mr-2">New</span>
                                 <svg
                                     className={`w-4 h-4 transition-transform duration-200 ${openMenus.includes('pdftools') ? 'rotate-180' : ''}`}
                                     fill="none"
@@ -263,10 +262,10 @@ export default function AuthenticatedLayout({ header, children }) {
                                     href={route('tools.editor')}
                                     onClick={() => setSidebarOpen(false)}
                                     className={`block py-2 text-sm transition-colors ${
-                                        route().current('tools.editor') ? 'text-purple-400 font-bold' : 'text-slate-500 hover:text-white'
+                                        route().current('tools.editor') ? 'text-purple-400 font-medium' : 'text-slate-500 hover:text-white'
                                     }`}
                                 >
-                                    Visual PDF Editor 🎨
+                                    Visual PDF Editor
                                 </Link>
                                 <Link
                                     href={route('tools.protect')}

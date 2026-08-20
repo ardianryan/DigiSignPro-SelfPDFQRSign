@@ -52,7 +52,7 @@ export default function VisualPdfEditor({ auth }) {
         }
 
         if (!window.pdfjsLib) {
-            Swal.fire('Memuat Modul', 'Modul PDF Viewer sedang diinisialisasi, silakan coba 1 detik lagi.', 'info');
+            Swal.fire('Memuat Modul', 'Modul PDF Viewer sedang diinisialisasi, silakan coba sebentar lagi.', 'info');
             return;
         }
 
@@ -255,7 +255,6 @@ export default function VisualPdfEditor({ auth }) {
                         const pdfX = anno.x * ratioX;
                         const pdfY = pdfHeight - (anno.y * ratioY) - (anno.size * ratioY);
                         
-                        // Parse Hex Color
                         const r = parseInt(anno.color.slice(1, 3), 16) / 255;
                         const g = parseInt(anno.color.slice(3, 5), 16) / 255;
                         const b = parseInt(anno.color.slice(5, 7), 16) / 255;
@@ -332,14 +331,14 @@ export default function VisualPdfEditor({ auth }) {
             }).catch(() => {});
 
             Swal.fire({
-                title: 'PDF Berhasil Disimpan!',
-                text: 'Perubahan teks, gambar, dan stempel Anda telah tertanam permanen ke dalam berkas PDF.',
+                title: 'Berhasil Disimpan',
+                text: 'Perubahan teks, gambar, dan stempel telah diterapkan ke dalam berkas PDF.',
                 icon: 'success',
                 confirmButtonColor: '#2563eb',
             });
         } catch (err) {
             console.error('Export error:', err);
-            Swal.fire('Gagal Menyimpan', 'Terjadi kesalahan saat menyatukan hasil editan.', 'error');
+            Swal.fire('Gagal Menyimpan', 'Terjadi kesalahan saat menyimpan perubahan.', 'error');
         } finally {
             setIsProcessing(false);
         }
@@ -352,10 +351,7 @@ export default function VisualPdfEditor({ auth }) {
             header={
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Visual PDF Canvas Editor 🎨</h2>
-                        <span className="text-[10px] bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 font-bold px-2 py-0.5 rounded-full">
-                            Zero-Server
-                        </span>
+                        <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200">Visual PDF Editor</h2>
                     </div>
                     <Link href={route('dashboard')} className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -371,111 +367,115 @@ export default function VisualPdfEditor({ auth }) {
             <div className="py-4">
                 <div className="mx-auto max-w-7xl">
                     {!file ? (
-                        <div className="bg-white dark:bg-gray-800 rounded-3xl p-12 border border-slate-200 dark:border-gray-700 shadow-sm text-center max-w-2xl mx-auto">
-                            <label className="border-2 border-dashed border-slate-300 dark:border-gray-600 hover:border-blue-500 rounded-2xl p-12 flex flex-col items-center justify-center cursor-pointer transition-all">
-                                <div className="w-16 h-16 rounded-2xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4">
-                                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-10 border border-slate-200 dark:border-gray-700 shadow-xs text-center max-w-2xl mx-auto">
+                            <label className="border-2 border-dashed border-slate-300 dark:border-gray-600 hover:border-blue-500 rounded-xl p-10 flex flex-col items-center justify-center cursor-pointer transition-colors">
+                                <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-3">
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
                                     </svg>
                                 </div>
-                                <h3 className="text-base font-bold text-slate-800 dark:text-white">
+                                <h3 className="text-sm font-bold text-slate-800 dark:text-white">
                                     Pilih Berkas PDF untuk Diedit
                                 </h3>
-                                <p className="text-xs text-slate-400 mt-1 max-w-md">
-                                    Tambahkan teks baru, tempel gambar stempel/tanda tangan, hapus/sensor teks lama dengan whiteout, atau gambar bebas.
+                                <p className="text-xs text-slate-500 mt-1 max-w-md">
+                                    Tambahkan teks baru, tempel gambar stempel/tanda tangan, tutup teks lama (whiteout), atau buat coretan.
                                 </p>
                                 <input type="file" accept="application/pdf" onChange={handleFileChange} className="hidden" />
                             </label>
                         </div>
                     ) : (
                         <div className="space-y-4">
-                            {/* Top Interactive Toolbar */}
-                            <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-slate-200 dark:border-gray-700 shadow-sm flex flex-wrap items-center justify-between gap-4">
-                                {/* Tool Selection Buttons */}
-                                <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 dark:bg-gray-700/60 p-1.5 rounded-xl">
+                            {/* Top Toolbar */}
+                            <div className="bg-white dark:bg-gray-800 rounded-xl p-3.5 border border-slate-200 dark:border-gray-700 shadow-xs flex flex-wrap items-center justify-between gap-3">
+                                {/* Tool Selection */}
+                                <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 dark:bg-gray-700 p-1 rounded-lg">
                                     <button
                                         type="button"
                                         onClick={() => setActiveTool('select')}
-                                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                                            activeTool === 'select' ? 'bg-white dark:bg-gray-800 text-blue-600 shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
+                                        className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+                                            activeTool === 'select' ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
                                         }`}
                                     >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path>
                                         </svg>
-                                        Pilih / Geser
+                                        Pilih
                                     </button>
 
                                     <button
                                         type="button"
                                         onClick={() => setActiveTool('text')}
-                                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                                        className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors ${
                                             activeTool === 'text' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
                                         }`}
                                     >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                         </svg>
-                                        + Tambah Teks
+                                        Teks
                                     </button>
 
-                                    <label className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                                    <label className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
                                         activeTool === 'image' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
                                     }`}>
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                         </svg>
-                                        + Tempel Gambar
+                                        Gambar
                                         <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                                     </label>
 
                                     <button
                                         type="button"
                                         onClick={() => setActiveTool('whiteout')}
-                                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                                        className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors ${
                                             activeTool === 'whiteout' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
                                         }`}
                                     >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                                         </svg>
-                                        Whiteout / Sensor
+                                        Whiteout
                                     </button>
 
                                     <button
                                         type="button"
                                         onClick={() => setActiveTool('draw')}
-                                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                                        className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors ${
                                             activeTool === 'draw' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
                                         }`}
                                     >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
                                         </svg>
-                                        Pena Bebas
+                                        Coretan
                                     </button>
                                 </div>
 
-                                {/* Page Navigator & Scale Controls */}
+                                {/* Page Navigator & Zoom Controls */}
                                 <div className="flex items-center gap-2 text-xs">
                                     <button
                                         type="button"
                                         onClick={() => setPageNum(p => Math.max(1, p - 1))}
                                         disabled={pageNum <= 1}
-                                        className="p-1.5 rounded-lg border border-slate-200 dark:border-gray-600 hover:bg-slate-50 disabled:opacity-30"
+                                        className="p-1 rounded-md border border-slate-200 dark:border-gray-600 hover:bg-slate-50 dark:hover:bg-gray-700 disabled:opacity-30"
                                     >
-                                        ◀
+                                        <svg className="w-4 h-4 text-slate-600 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path>
+                                        </svg>
                                     </button>
-                                    <span className="font-semibold text-slate-700 dark:text-slate-200">
+                                    <span className="font-medium text-slate-700 dark:text-slate-200">
                                         Hal. {pageNum} / {totalPages}
                                     </span>
                                     <button
                                         type="button"
                                         onClick={() => setPageNum(p => Math.min(totalPages, p + 1))}
                                         disabled={pageNum >= totalPages}
-                                        className="p-1.5 rounded-lg border border-slate-200 dark:border-gray-600 hover:bg-slate-50 disabled:opacity-30"
+                                        className="p-1 rounded-md border border-slate-200 dark:border-gray-600 hover:bg-slate-50 dark:hover:bg-gray-700 disabled:opacity-30"
                                     >
-                                        ▶
+                                        <svg className="w-4 h-4 text-slate-600 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                                        </svg>
                                     </button>
 
                                     <div className="h-4 w-px bg-slate-200 dark:bg-gray-700 mx-1"></div>
@@ -483,7 +483,7 @@ export default function VisualPdfEditor({ auth }) {
                                     <button
                                         type="button"
                                         onClick={() => setScale(s => Math.max(0.8, s - 0.2))}
-                                        className="px-2 py-1 rounded-lg border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-slate-300 font-bold"
+                                        className="w-6 h-6 rounded-md border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-slate-300 font-bold flex items-center justify-center"
                                     >
                                         -
                                     </button>
@@ -493,7 +493,7 @@ export default function VisualPdfEditor({ auth }) {
                                     <button
                                         type="button"
                                         onClick={() => setScale(s => Math.min(2.0, s + 0.2))}
-                                        className="px-2 py-1 rounded-lg border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-slate-300 font-bold"
+                                        className="w-6 h-6 rounded-md border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-slate-300 font-bold flex items-center justify-center"
                                     >
                                         +
                                     </button>
@@ -505,7 +505,7 @@ export default function VisualPdfEditor({ auth }) {
                                         <button
                                             type="button"
                                             onClick={deleteSelectedAnnotation}
-                                            className="px-3 py-1.5 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 text-xs font-semibold border border-red-200"
+                                            className="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 text-xs font-medium border border-red-200"
                                         >
                                             Hapus Elemen
                                         </button>
@@ -515,80 +515,83 @@ export default function VisualPdfEditor({ auth }) {
                                         type="button"
                                         onClick={handleExport}
                                         disabled={isProcessing}
-                                        className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-500/20 disabled:opacity-50 transition-all flex items-center gap-2"
+                                        className="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs disabled:opacity-50 transition-colors flex items-center gap-1.5"
                                     >
-                                        {isProcessing ? 'Menyimpan...' : 'Simpan & Download PDF ⬇'}
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                        </svg>
+                                        {isProcessing ? 'Menyimpan...' : 'Simpan PDF'}
                                     </button>
                                 </div>
                             </div>
 
-                            {/* Secondary Tool Parameter Options */}
+                            {/* Tool Options */}
                             {activeTool === 'text' && (
-                                <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 p-3 rounded-2xl flex flex-wrap items-center gap-4 text-xs animate-fade-in">
-                                    <span className="font-bold text-blue-900 dark:text-blue-200">Pengaturan Teks:</span>
+                                <div className="bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 p-3 rounded-xl flex flex-wrap items-center gap-3 text-xs">
+                                    <span className="font-semibold text-slate-700 dark:text-slate-200">Pengaturan Teks:</span>
                                     <input
                                         type="text"
                                         value={textValue}
                                         onChange={(e) => setTextValue(e.target.value)}
-                                        placeholder="Ketik teks yang ingin ditempel..."
-                                        className="border border-blue-300 rounded-lg px-3 py-1 text-xs w-64 dark:bg-gray-800 dark:text-white"
+                                        placeholder="Ketik teks..."
+                                        className="border border-slate-300 dark:border-gray-600 rounded-md px-2.5 py-1 text-xs w-56 dark:bg-gray-700 dark:text-white"
                                     />
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-1.5">
                                         <span>Ukuran:</span>
                                         <input
                                             type="number"
                                             value={textSize}
                                             onChange={(e) => setTextSize(Number(e.target.value))}
-                                            className="border border-blue-300 rounded-lg px-2 py-1 text-xs w-16 text-center dark:bg-gray-800 dark:text-white"
+                                            className="border border-slate-300 dark:border-gray-600 rounded-md px-2 py-1 text-xs w-14 text-center dark:bg-gray-700 dark:text-white"
                                             min="8"
                                             max="72"
                                         />
                                     </div>
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-1.5">
                                         <span>Warna:</span>
                                         <input
                                             type="color"
                                             value={textColor}
                                             onChange={(e) => setTextColor(e.target.value)}
-                                            className="w-7 h-7 rounded border border-blue-300 cursor-pointer"
+                                            className="w-6 h-6 rounded border border-slate-300 dark:border-gray-600 cursor-pointer"
                                         />
                                     </div>
-                                    <span className="text-[11px] text-blue-700 dark:text-blue-300 italic">
-                                        👉 Klik pada posisi dokumen yang ingin ditempeli teks.
+                                    <span className="text-[11px] text-slate-500">
+                                        Klik pada dokumen untuk menempatkan teks.
                                     </span>
                                 </div>
                             )}
 
                             {activeTool === 'whiteout' && (
-                                <div className="bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60 p-3 rounded-2xl flex flex-wrap items-center gap-4 text-xs animate-fade-in">
-                                    <span className="font-bold text-purple-900 dark:text-purple-200">Mode Sensor/Hapus:</span>
+                                <div className="bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 p-3 rounded-xl flex flex-wrap items-center gap-3 text-xs">
+                                    <span className="font-semibold text-slate-700 dark:text-slate-200">Mode Penutup:</span>
                                     <button
                                         type="button"
                                         onClick={() => setWhiteoutColor('#ffffff')}
-                                        className={`px-3 py-1 rounded-lg border text-xs font-semibold ${
-                                            whiteoutColor === '#ffffff' ? 'bg-white text-slate-900 border-purple-500 shadow-xs' : 'bg-transparent text-slate-600'
+                                        className={`px-2.5 py-1 rounded-md border text-xs font-medium ${
+                                            whiteoutColor === '#ffffff' ? 'bg-white text-slate-900 border-slate-400 shadow-xs' : 'bg-transparent text-slate-600'
                                         }`}
                                     >
-                                        ⬜ Whiteout (Penutup Putih / Timpa Teks)
+                                        Whiteout (Putih)
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setWhiteoutColor('#000000')}
-                                        className={`px-3 py-1 rounded-lg border text-xs font-semibold ${
-                                            whiteoutColor === '#000000' ? 'bg-black text-white border-purple-500 shadow-xs' : 'bg-transparent text-slate-600'
+                                        className={`px-2.5 py-1 rounded-md border text-xs font-medium ${
+                                            whiteoutColor === '#000000' ? 'bg-slate-900 text-white border-slate-900 shadow-xs' : 'bg-transparent text-slate-600'
                                         }`}
                                     >
-                                        ⬛ Blackout (Sensor Hitam Rahasia)
+                                        Blackout (Sensor Hitam)
                                     </button>
-                                    <span className="text-[11px] text-purple-700 dark:text-purple-300 italic">
-                                        👉 Klik di atas teks yang ingin ditutupi.
+                                    <span className="text-[11px] text-slate-500">
+                                        Klik pada dokumen untuk menempatkan penutup.
                                     </span>
                                 </div>
                             )}
 
-                            {/* Main Interactive Canvas Viewer */}
-                            <div className="bg-slate-200 dark:bg-gray-900 rounded-3xl p-6 overflow-auto flex justify-center min-h-[600px] border border-slate-300 dark:border-gray-800">
-                                <div className="relative shadow-2xl rounded-lg bg-white overflow-hidden select-none">
+                            {/* Main Canvas Viewer */}
+                            <div className="bg-slate-100 dark:bg-gray-900 rounded-2xl p-6 overflow-auto flex justify-center min-h-[600px] border border-slate-200 dark:border-gray-800">
+                                <div className="relative shadow-md rounded-md bg-white overflow-hidden select-none">
                                     {/* PDF Page Background Canvas */}
                                     <canvas ref={canvasRef} className="block" />
 
@@ -602,7 +605,7 @@ export default function VisualPdfEditor({ auth }) {
                                         className={`absolute inset-0 ${
                                             activeTool === 'text' ? 'cursor-text' :
                                             activeTool === 'whiteout' ? 'cursor-crosshair' :
-                                            activeTool === 'draw' ? 'cursor-pencil' : 'cursor-default'
+                                            activeTool === 'draw' ? 'cursor-crosshair' : 'cursor-default'
                                         }`}
                                     >
                                         {/* Render Page Annotations */}
@@ -652,7 +655,7 @@ export default function VisualPdfEditor({ auth }) {
                                                             backgroundColor: anno.color,
                                                         }}
                                                         className={`cursor-move rounded-xs ${
-                                                            isSelected ? 'ring-2 ring-blue-500' : 'hover:ring-1 hover:ring-purple-400'
+                                                            isSelected ? 'ring-2 ring-blue-500' : 'hover:ring-1 hover:ring-slate-400'
                                                         }`}
                                                     />
                                                 );
@@ -674,10 +677,10 @@ export default function VisualPdfEditor({ auth }) {
                                                             height: `${anno.height}px`,
                                                         }}
                                                         className={`cursor-move p-0.5 rounded ${
-                                                            isSelected ? 'ring-2 ring-blue-500 shadow-lg' : 'hover:ring-1 hover:ring-slate-400'
+                                                            isSelected ? 'ring-2 ring-blue-500 shadow-sm' : 'hover:ring-1 hover:ring-slate-400'
                                                         }`}
                                                     >
-                                                        <img src={anno.src} alt="Stamp" className="w-full h-full object-contain pointer-events-none" />
+                                                        <img src={anno.src} alt="Uploaded Stamp" className="w-full h-full object-contain pointer-events-none" />
                                                     </div>
                                                 );
                                             }

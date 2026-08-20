@@ -8,16 +8,25 @@ export default function ToolsIndex({ auth }) {
 
     const tools = [
         {
+            id: 'editor',
+            title: 'Visual PDF Editor',
+            category: 'editor',
+            categoryLabel: 'Editor Visual',
+            description: 'Ubah teks, tempel stempel atau paraf tanda tangan, tutup teks lama (whiteout), dan coretan.',
+            iconBg: 'from-blue-600 to-indigo-600',
+            href: route('tools.editor'),
+            icon: (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+            )
+        },
+        {
             id: 'merge',
             title: 'Merge PDF',
             category: 'organize',
             categoryLabel: 'Tata Letak',
             description: 'Gabungkan beberapa file PDF menjadi satu dokumen berurutan secara instan.',
-            iconBg: 'from-blue-500 to-indigo-600',
-            badge: 'Paling Populer',
-            badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+            iconBg: 'from-slate-700 to-slate-800',
             href: route('tools.merge'),
-            isFeatured: true,
             icon: (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path>
             )
@@ -28,9 +37,8 @@ export default function ToolsIndex({ auth }) {
             category: 'organize',
             categoryLabel: 'Tata Letak',
             description: 'Pisahkan halaman PDF menjadi file terpisah atau ekstrak rentang halaman tertentu.',
-            iconBg: 'from-purple-500 to-pink-600',
+            iconBg: 'from-slate-700 to-slate-800',
             href: route('tools.split'),
-            isFeatured: false,
             icon: (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
             )
@@ -41,11 +49,8 @@ export default function ToolsIndex({ auth }) {
             category: 'organize',
             categoryLabel: 'Tata Letak',
             description: 'Atur susunan urutan halaman, putar sudut orientasi, dan hapus halaman yang tidak diperlukan.',
-            iconBg: 'from-emerald-500 to-teal-600',
-            badge: 'Interaktif',
-            badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+            iconBg: 'from-slate-700 to-slate-800',
             href: route('tools.organize'),
-            isFeatured: true,
             icon: (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
             )
@@ -56,9 +61,8 @@ export default function ToolsIndex({ auth }) {
             category: 'convert',
             categoryLabel: 'Konversi',
             description: 'Ubah foto JPG, PNG, atau WebP menjadi satu dokumen PDF dengan pengaturan ukuran kertas.',
-            iconBg: 'from-amber-500 to-orange-600',
+            iconBg: 'from-slate-700 to-slate-800',
             href: route('tools.image_to_pdf'),
-            isFeatured: false,
             icon: (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
             )
@@ -67,11 +71,10 @@ export default function ToolsIndex({ auth }) {
             id: 'watermark',
             title: 'Watermark PDF',
             category: 'security',
-            categoryLabel: 'Keamanan & Desain',
+            categoryLabel: 'Keamanan & Dokumen',
             description: 'Tambahkan stempel teks atau logo transparan dengan kustomisasi sudut rotasi dan opasitas.',
-            iconBg: 'from-cyan-500 to-blue-600',
+            iconBg: 'from-slate-700 to-slate-800',
             href: route('tools.watermark'),
-            isFeatured: false,
             icon: (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path>
             )
@@ -80,11 +83,10 @@ export default function ToolsIndex({ auth }) {
             id: 'page-number',
             title: 'Page Numbering',
             category: 'security',
-            categoryLabel: 'Keamanan & Desain',
+            categoryLabel: 'Keamanan & Dokumen',
             description: 'Sisipkan penomoran halaman otomatis pada header atau footer dokumen dengan beragam format.',
-            iconBg: 'from-violet-500 to-purple-600',
+            iconBg: 'from-slate-700 to-slate-800',
             href: route('tools.page_number'),
-            isFeatured: false,
             icon: (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
             )
@@ -93,11 +95,10 @@ export default function ToolsIndex({ auth }) {
             id: 'protect',
             title: 'Protect & Encrypt',
             category: 'security',
-            categoryLabel: 'Keamanan & Desain',
+            categoryLabel: 'Keamanan & Dokumen',
             description: 'Enkripsi dokumen PDF dengan password keamanan tinggi sebelum dibagikan.',
-            iconBg: 'from-rose-500 to-red-600',
+            iconBg: 'from-slate-700 to-slate-800',
             href: route('tools.protect'),
-            isFeatured: false,
             icon: (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
             )
