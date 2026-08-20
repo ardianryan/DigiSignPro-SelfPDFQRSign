@@ -12,7 +12,7 @@ export default function VisualPdfEditor({ auth }) {
     const [scale, setScale] = useState(1.25);
     const [activeTool, setActiveTool] = useState('select'); // 'select', 'edit-pdf-text', 'text', 'image', 'whiteout', 'draw'
     
-    // Annotations State per page: { [pageNum]: [ { id, type: 'text'|'image'|'rect'|'draw', x, y, width, height, text, color, size, font, isEditing } ] }
+    // Annotations State per page: { [pageNum]: [ { id, type: 'text'|'image'|'rect'|'draw', x, y, width, height, text, color, size, font } ] }
     const [annotations, setAnnotations] = useState({});
     const [selectedAnnotationId, setSelectedAnnotationId] = useState(null);
     const [editingAnnotationId, setEditingAnnotationId] = useState(null);
@@ -167,7 +167,6 @@ export default function VisualPdfEditor({ auth }) {
 
     // Handle Overlay Canvas Click to Add Text Inline or Whiteout
     const handleOverlayClick = (e) => {
-        // If clicking on an input/textarea/handle or editing, ignore
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.closest('.annotation-item')) {
             return;
         }
@@ -210,7 +209,6 @@ export default function VisualPdfEditor({ auth }) {
             setSelectedAnnotationId(newId);
             setActiveTool('select');
         } else {
-            // Click outside elements deselects and commits active edit
             setEditingAnnotationId(null);
             setSelectedAnnotationId(null);
         }
@@ -306,7 +304,7 @@ export default function VisualPdfEditor({ auth }) {
 
     // Element Dragging Logic
     const handleElementMouseDown = (e, anno) => {
-        if (editingAnnotationId === anno.id) return; // Allow normal cursor & text selection while editing
+        if (editingAnnotationId === anno.id) return;
         e.stopPropagation();
         
         setSelectedAnnotationId(anno.id);
@@ -421,7 +419,6 @@ export default function VisualPdfEditor({ auth }) {
                     if (anno.type === 'text') {
                         const pdfX = anno.x * ratioX;
                         const fontSizeInPdf = anno.size * ratioY;
-                        // Y coordinate is inverted in PDF coordinate system
                         const pdfY = pdfHeight - (anno.y * ratioY) - fontSizeInPdf;
 
                         let selectedFont = fontHelvetica;
@@ -433,7 +430,6 @@ export default function VisualPdfEditor({ auth }) {
                         const g = parseInt(anno.color.slice(3, 5), 16) / 255;
                         const b = parseInt(anno.color.slice(5, 7), 16) / 255;
 
-                        // Handle multiline text
                         const lines = (anno.text || '').split('\n');
                         lines.forEach((lineText, lIdx) => {
                             if (!lineText) return;
@@ -921,7 +917,6 @@ export default function VisualPdfEditor({ auth }) {
                                                 return (
                                                     <div
                                                         key={anno.id}
-                                                        className="annotation-item"
                                                         onMouseDown={(e) => handleElementMouseDown(e, anno)}
                                                         style={{
                                                             position: 'absolute',
@@ -932,7 +927,7 @@ export default function VisualPdfEditor({ auth }) {
                                                             backgroundColor: anno.color,
                                                             zIndex: 10,
                                                         }}
-                                                        className={`cursor-move rounded-xs ${
+                                                        className={`annotation-item cursor-move rounded-xs ${
                                                             isSelected ? 'ring-2 ring-blue-500 shadow-sm' : 'hover:ring-1 hover:ring-slate-400'
                                                         }`}
                                                     />
@@ -943,7 +938,6 @@ export default function VisualPdfEditor({ auth }) {
                                                 return (
                                                     <div
                                                         key={anno.id}
-                                                        className="annotation-item"
                                                         onMouseDown={(e) => handleElementMouseDown(e, anno)}
                                                         style={{
                                                             position: 'absolute',
@@ -953,7 +947,7 @@ export default function VisualPdfEditor({ auth }) {
                                                             height: `${anno.height}px`,
                                                             zIndex: 15,
                                                         }}
-                                                        className={`cursor-move p-0.5 rounded ${
+                                                        className={`annotation-item cursor-move p-0.5 rounded ${
                                                             isSelected ? 'ring-2 ring-blue-500 shadow-sm' : 'hover:ring-1 hover:ring-slate-400'
                                                         }`}
                                                     >
