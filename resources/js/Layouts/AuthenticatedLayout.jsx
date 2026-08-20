@@ -205,6 +205,15 @@ export default function AuthenticatedLayout({ header, children }) {
                         {openMenus.includes('pdftools') && (
                             <div className="pl-12 space-y-1">
                                 <Link
+                                    href={route('tools.editor')}
+                                    onClick={() => setSidebarOpen(false)}
+                                    className={`block py-2 text-sm transition-colors ${
+                                        route().current('tools.editor') ? 'text-purple-400 font-medium' : 'text-slate-500 hover:text-white'
+                                    }`}
+                                >
+                                    Visual PDF Editor
+                                </Link>
+                                <Link
                                     href={route('tools.merge')}
                                     onClick={() => setSidebarOpen(false)}
                                     className={`block py-2 text-sm transition-colors ${
@@ -257,15 +266,6 @@ export default function AuthenticatedLayout({ header, children }) {
                                     }`}
                                 >
                                     Page Numbering
-                                </Link>
-                                <Link
-                                    href={route('tools.editor')}
-                                    onClick={() => setSidebarOpen(false)}
-                                    className={`block py-2 text-sm transition-colors ${
-                                        route().current('tools.editor') ? 'text-purple-400 font-medium' : 'text-slate-500 hover:text-white'
-                                    }`}
-                                >
-                                    Visual PDF Editor
                                 </Link>
                                 <Link
                                     href={route('tools.protect')}
