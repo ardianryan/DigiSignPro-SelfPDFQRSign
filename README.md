@@ -15,12 +15,13 @@
 
 <p align="center">
   <a href="#-key-features">Key Features</a> •
-  <a href="#-all-in-one-pdf-suite--editor">PDF Suite</a> •
+  <a href="#-all-in-one-pdf-suite--editor-zero-server-storage">PDF Suite</a> •
   <a href="#-architecture--tech-stack">Tech Stack</a> •
   <a href="#-installation--setup">Quick Start</a> •
+  <a href="#-upgrading-from-legacy-digisign-php-native">Upgrade Guide</a> •
   <a href="#-rest-api-reference">REST API</a> •
   <a href="#-security-hardening-osi-layers">Security & OSI</a> •
-  <a href="#-contributing">Contributing</a>
+  <a href="#-contributing--community">Contributing</a>
 </p>
 
 </div>
@@ -203,6 +204,41 @@ DigiSign Pro features a modular **Bento Grid Tool Hub** powered by an in-browser
    php artisan route:cache
    php artisan view:cache
    ```
+
+---
+
+## 🔄 Upgrading from Legacy DigiSign (PHP Native)
+
+If you are upgrading an existing deployment from **DigiSign PHP Native (v1.x)** to **DigiSign Pro (v2.x)**, follow this seamless cutover procedure to preserve all user accounts, password hashes, signatures, and document records:
+
+### 1. Compatibility Summary
+* **Passwords**: 100% Compatible (Existing Bcrypt hashes work out-of-the-box).
+* **Signatures & Documents**: 100% Preserved in MySQL and `uploads/` directory.
+* **Active Sessions**: Users must re-login once due to the upgrade from `$_SESSION` to Laravel Encrypted Sessions.
+
+### 2. Migration Steps
+1. **Pull Latest Code**:
+   ```bash
+   git pull origin main
+   composer install --no-dev --optimize-autoloader
+   npm ci && npm run build
+   ```
+
+2. **Configure `.env`**:
+   Point your database credentials (`DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`) to your existing MySQL database.
+
+3. **Execute One-Time Automated Cutover Command**:
+   ```bash
+   php artisan digisign:legacy-cutover
+   ```
+   *This command automatically adapts legacy database tables, runs required migrations, generates API keys for existing users, and locks the cutover state.*
+
+4. **Update Web Server Root**:
+   * Change web server Document Root from `/path/to/digisign` to **`/path/to/digisign/public`**.
+   * Configure Nginx URL rewrite (`try_files $uri $uri/ /index.php?$query_string;`).
+   * Run symlink: `php artisan storage:link`.
+
+For deeper technical details on the cutover architecture, see [`docs/LEGACY_CUTOVER.md`](docs/LEGACY_CUTOVER.md).
 
 ---
 
