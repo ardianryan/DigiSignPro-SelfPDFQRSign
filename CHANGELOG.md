@@ -69,4 +69,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Programmatic endpoints under `/api/v1/` authenticated via `Bearer` or `X-API-Key` headers.
   - Machine-readable documentation endpoint at `/api/v1/docs/quickapi.md`.
 - **Idempotent Legacy Database Migration**:
-  - Automatic table and schema migration preserving existing database records and users.
+  - Seamless cutover and schema adapter for existing DigiSign database tables without data loss.
+
+---
+
+## [1.3.3] - 2026-03-22
+
+### 🚀 Added
+- S3 storage transparency and UI status indicators.
+- Cumulative updater and schema migration synchronization.
+- Cookie consent dialog integration.
+- Sidebar menu categorization into collapsible groups.
+
+---
+
+## [1.3.1] - 2026-03-19
+
+### 🚀 Added
+- Amazon S3 and Cloudflare R2 object storage integration.
+- Storage management and configuration panel in admin area.
+
+---
+
+## [1.1.2] - 2026-02-10
+
+### 📌 Initial Release
+- Initial open-source release of DigiSign PHP Native.
+- Basic single PDF signing with FPDF and FPDI.
+- MySQL database storage for user signatures and document records.
