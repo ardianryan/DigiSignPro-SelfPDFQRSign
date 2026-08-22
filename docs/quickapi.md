@@ -65,6 +65,7 @@ GET {{API_BASE}}/me?api_key={{API_KEY}}
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET` | `/api/v1/me` | Current user profile |
+| `GET` | `/api/v1/stats` | User stats & PDF tool usage counters |
 | `GET` | `/api/v1/signatures` | List signature history |
 | `GET` | `/api/v1/signatures/{id}` | Signature detail |
 | `DELETE` | `/api/v1/signatures/{id}` | Delete signature (+ file if any) |
@@ -88,7 +89,7 @@ GET {{API_BASE}}/health
   "data": {
     "status": "ok",
     "app": "DigiSign Pro",
-    "time": "2026-07-24T10:00:00+07:00",
+    "time": "2026-08-22T10:00:00+07:00",
     "api_version": "v1"
   }
 }
@@ -106,7 +107,46 @@ Authorization: Bearer {{API_KEY}}
 
 ---
 
-### 4.3 List signatures
+### 4.3 Stats & Tool Usage
+```http
+GET {{API_BASE}}/stats
+Authorization: Bearer {{API_KEY}}
+```
+
+**Response 200**
+```json
+{
+  "success": true,
+  "message": "Statistik akun dan PDF tools",
+  "data": {
+    "user": {
+      "id": 1,
+      "name": "Super Admin",
+      "role": "admin",
+      "signature_prefix": "DS"
+    },
+    "signatures": {
+      "total": 42,
+      "digital": 30,
+      "qr_manual": 12
+    },
+    "pdf_tools": {
+      "editor": { "name": "Visual PDF Editor", "uses": 15, "files": 15 },
+      "merge": { "name": "Merge PDF", "uses": 8, "files": 24 },
+      "split": { "name": "Split PDF", "uses": 5, "files": 5 },
+      "organize": { "name": "Organize & Rotate", "uses": 6, "files": 6 },
+      "watermark": { "name": "Watermark PDF", "uses": 4, "files": 4 },
+      "page_number": { "name": "Page Numbering", "uses": 3, "files": 3 },
+      "protect": { "name": "Protect & Encrypt", "uses": 2, "files": 2 },
+      "image_to_pdf": { "name": "Image to PDF", "uses": 7, "files": 14 }
+    }
+  }
+}
+```
+
+---
+
+### 4.4 List signatures
 ```http
 GET {{API_BASE}}/signatures?search=&signature_type=&per_page=20&page=1
 Authorization: Bearer {{API_KEY}}

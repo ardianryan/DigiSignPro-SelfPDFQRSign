@@ -93,8 +93,10 @@ class SignController extends BaseApiController
             for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
                 $templateId = $pdf->importPage($pageNo);
                 $size = $pdf->getTemplateSize($templateId);
-                $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
-                $pdf->useTemplate($templateId);
+                $orientation = ($size['width'] > $size['height']) ? 'L' : 'P';
+
+                $pdf->AddPage($orientation, [$size['width'], $size['height']]);
+                $pdf->useTemplate($templateId, 0, 0, $size['width'], $size['height'], true);
 
                 if ($pageNo === $pageToSign) {
                     $qrSize = 25;

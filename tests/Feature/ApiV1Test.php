@@ -160,4 +160,55 @@ class ApiV1Test extends TestCase
             ->deleteJson('/api/v1/signatures/'.$sig->id)
             ->assertStatus(403);
     }
+
+    public function test_stats_endpoint_returns_user_and_tool_statistics(): void
+    {
+        ['user' => $user] = $this->seedUsers();
+
+        \App\Models\ToolUsage::create([
+            'user_id' => $user->id,
+            'tool_name' => 'editor',
+            'files_count' => 3,
+        ]);
+
+        $this->withHeader('Authorization', 'Bearer '.$user->api_key)
+            ->getJson('/api/v1/stats')
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.user.id', $user->id)
+            ->assertJsonPath('data.pdf_tools.editor.uses', 1)
+            ->assertJsonPath('data.pdf_tools.editor.files', 3);
+    }
+
+    public function test_qr_manual_sign_via_api(): void
+    {
+        ['user' => $user] = $this->seedUsers();
+
+        $response = $this->withHeader('X-API-Key', $user->api_key)
+            ->postJson('/api/v1/sign/qr-manual', [
+                'document_number' => 'MANUAL-001',
+                'subject' => 'Manual TTE Subject',
+                'pdf_password' => 'passphrase123',
+            ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('success', true)
+            ->assertJsonStructure(['data' => ['id', 'verify_code', 'verify_url', 'qr_image_data_uri']]);
+
+        $this->assertDatabaseHas('signatures', [
+            'document_number' => 'MANUAL-001',
+            'user_id' => $user->id,
+            'signature_type' => 'qr_manual',
+        ]);
+    }
+
+    public function test_invalid_api_key_returns_unauthorized(): void
+    {
+        $this->seedUsers();
+
+        $this->withHeader('Authorization', 'Bearer digi_fake_invalid_key')
+            ->getJson('/api/v1/me')
+            ->assertStatus(401)
+            ->assertJsonPath('error', 'invalid_api_key');
+    }
 }

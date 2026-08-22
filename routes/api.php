@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\SignatureController;
 use App\Http\Controllers\Api\V1\SignController;
+use App\Http\Controllers\Api\V1\StatsController;
 use App\Http\Controllers\Api\V1\VerifyController;
 use Illuminate\Support\Facades\Route;
 
@@ -26,6 +27,7 @@ Route::prefix('v1')->group(function () {
     // Authenticated (per-user API key)
     Route::middleware(['api.key', 'throttle:api'])->group(function () {
         Route::get('/me', [MeController::class, 'show'])->name('api.v1.me');
+        Route::get('/stats', [StatsController::class, 'show'])->name('api.v1.stats');
 
         Route::get('/signatures', [SignatureController::class, 'index'])->name('api.v1.signatures.index');
         Route::get('/signatures/{id}', [SignatureController::class, 'show'])->whereNumber('id')->name('api.v1.signatures.show');
