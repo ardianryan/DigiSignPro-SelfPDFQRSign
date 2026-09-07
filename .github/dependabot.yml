@@ -1,0 +1,52 @@
+version: 2
+updates:
+  # Maintain dependencies for Composer (PHP/Laravel)
+  - package-ecosystem: "composer"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:00"
+      timezone: "Asia/Jakarta"
+    open-pull-requests-limit: 10
+    target-branch: "main"
+    reviewers:
+      - "ardianryan"
+    labels:
+      - "dependencies"
+      - "security"
+    commit-message:
+      prefix: "chore(deps)"
+
+  # Maintain dependencies for npm (Node.js / React / Vite)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:00"
+      timezone: "Asia/Jakarta"
+    open-pull-requests-limit: 10
+    target-branch: "main"
+    reviewers:
+      - "ardianryan"
+    labels:
+      - "dependencies"
+      - "security"
+    commit-message:
+      prefix: "chore(deps)"
+
+  # Maintain GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    target-branch: "main"
+    reviewers:
+      - "ardianryan"
+    labels:
+      - "ci"
+      - "github-actions"
+    commit-message:
+      prefix: "ci(actions)"
