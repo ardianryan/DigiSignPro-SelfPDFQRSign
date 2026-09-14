@@ -17,6 +17,9 @@ updates:
       - "security"
     commit-message:
       prefix: "chore(deps)"
+    ignore:
+      - dependency-name: "inertiajs/inertia-laravel"
+        update-types: ["version-update:semver-major"]
 
   # Maintain dependencies for npm (Node.js / React / Vite)
   - package-ecosystem: "npm"
@@ -35,6 +38,15 @@ updates:
       - "security"
     commit-message:
       prefix: "chore(deps)"
+    ignore:
+      - dependency-name: "tailwindcss"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@inertiajs/react"
+        update-types: ["version-update:semver-major"]
 
   # Maintain GitHub Actions dependencies
   - package-ecosystem: "github-actions"
