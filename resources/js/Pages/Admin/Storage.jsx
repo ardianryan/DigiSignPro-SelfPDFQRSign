@@ -44,15 +44,14 @@ export default function Storage({ auth, stats, files = [], storageMode = 'local'
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                         <div>
                             <p className="text-slate-500 dark:text-slate-400">
-                                Pantau dan kelola berkas tanda tangan (mode:{' '}
+                                Pantau dan kelola berkas tanda tangan · Mode:{' '}
                                 <span className="font-semibold uppercase text-blue-600">{storageMode || 'local'}</span>
-                                {stats?.bucket && stats.bucket !== '-' && stats.bucket !== 'local' ? (
+                                {stats?.bucket && stats.bucket !== '-' && stats.bucket !== 'local' && (
                                     <>
-                                        {' '}· bucket:{' '}
+                                        {' '}· Bucket:{' '}
                                         <span className="font-mono text-blue-600 dark:text-blue-400 font-bold">{stats.bucket}</span>
                                     </>
-                                ) : null}
-                                )
+                                )}
                             </p>
                             <p className="text-xs text-slate-400 dark:text-gray-500 mt-1">
                                 Direktori aktif: <span className="font-mono">{stats?.directory || '/'}</span>

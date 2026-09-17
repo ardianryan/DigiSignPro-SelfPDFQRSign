@@ -143,7 +143,7 @@ export default function Backup({ auth }) {
                                     : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'
                             }`}
                         >
-                            Cadangkan Data (Backup)
+                            Cadangkan Data
                         </button>
                         <button
                             onClick={() => setActiveTab('restore')}
@@ -153,7 +153,7 @@ export default function Backup({ auth }) {
                                     : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'
                             }`}
                         >
-                            Pulihkan Data (Restore)
+                            Pulihkan Data
                         </button>
                     </div>
 
@@ -215,7 +215,7 @@ export default function Backup({ auth }) {
                     {activeTab === 'restore' && (
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-200 dark:border-gray-700 p-6 space-y-6">
                             <div>
-                                <h3 className="text-lg font-bold text-slate-800 dark:text-white">Pulihkan Data (Restore)</h3>
+                                <h3 className="text-lg font-bold text-slate-800 dark:text-white">Pulihkan Data</h3>
                                 <p className="text-xs text-slate-400 dark:text-gray-400 mt-1">Unggah berkas ZIP cadangan Anda untuk mengembalikan keadaan sistem.</p>
                             </div>
 

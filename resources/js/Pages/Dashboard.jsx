@@ -2,6 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import Swal from 'sweetalert2';
+import { getPdfTools } from '@/Constants/pdfTools';
 
 export default function Dashboard({ auth, stats = {}, recentSignatures = [], adminAnalytics = null, settings = {} }) {
     const user = auth?.user || usePage().props.auth.user;
@@ -53,104 +54,7 @@ export default function Dashboard({ auth, stats = {}, recentSignatures = [], adm
         });
     };
 
-    const pdfTools = [
-        {
-            id: 'editor',
-            title: 'Visual PDF Editor',
-            category: 'editor',
-            categoryLabel: 'Editor Visual',
-            description: 'Ubah teks, tempel tanda tangan gambar/stempel, penutup teks (whiteout), dan anotasi.',
-            iconBg: 'from-blue-600 to-indigo-600',
-            href: route('tools.editor'),
-            icon: (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
-            )
-        },
-        {
-            id: 'merge',
-            title: 'Merge PDF',
-            category: 'organize',
-            categoryLabel: 'Tata Letak',
-            description: 'Gabungkan beberapa file PDF menjadi satu berkas dokumen utuh.',
-            iconBg: 'from-slate-700 to-slate-800',
-            href: route('tools.merge'),
-            icon: (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path>
-            )
-        },
-        {
-            id: 'split',
-            title: 'Split PDF',
-            category: 'organize',
-            categoryLabel: 'Tata Letak',
-            description: 'Ekstrak rentang halaman tertentu atau pisahkan per halaman.',
-            iconBg: 'from-slate-700 to-slate-800',
-            href: route('tools.split'),
-            icon: (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
-            )
-        },
-        {
-            id: 'organize',
-            title: 'Organize & Rotate',
-            category: 'organize',
-            categoryLabel: 'Tata Letak',
-            description: 'Atur susunan urutan halaman, rotasi sudut, dan hapus halaman.',
-            iconBg: 'from-slate-700 to-slate-800',
-            href: route('tools.organize'),
-            icon: (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-            )
-        },
-        {
-            id: 'image-to-pdf',
-            title: 'Image to PDF',
-            category: 'convert',
-            categoryLabel: 'Konversi',
-            description: 'Ubah file gambar JPG atau PNG menjadi PDF dengan format halaman terstandar.',
-            iconBg: 'from-slate-700 to-slate-800',
-            href: route('tools.image_to_pdf'),
-            icon: (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-            )
-        },
-        {
-            id: 'watermark',
-            title: 'Watermark PDF',
-            category: 'security',
-            categoryLabel: 'Keamanan & Dokumen',
-            description: 'Sisipkan stempel teks atau tanda kepemilikan dokumen.',
-            iconBg: 'from-slate-700 to-slate-800',
-            href: route('tools.watermark'),
-            icon: (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path>
-            )
-        },
-        {
-            id: 'page-number',
-            title: 'Page Numbering',
-            category: 'security',
-            categoryLabel: 'Keamanan & Dokumen',
-            description: 'Tambahkan penomoran halaman otomatis pada posisi header atau footer.',
-            iconBg: 'from-slate-700 to-slate-800',
-            href: route('tools.page_number'),
-            icon: (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
-            )
-        },
-        {
-            id: 'protect',
-            title: 'Protect & Encrypt',
-            category: 'security',
-            categoryLabel: 'Keamanan & Dokumen',
-            description: 'Enkripsi berkas dokumen PDF dengan kata sandi keamanan.',
-            iconBg: 'from-slate-700 to-slate-800',
-            href: route('tools.protect'),
-            icon: (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-            )
-        }
-    ];
+    const pdfTools = getPdfTools();
 
     const filteredTools = pdfTools.filter(t => {
         const matchCat = toolCategory === 'all' || t.category === toolCategory;
@@ -272,7 +176,7 @@ export default function Dashboard({ auth, stats = {}, recentSignatures = [], adm
                         <div className="bg-white dark:bg-gray-800 p-5 rounded-xl border border-slate-200 dark:border-gray-700 shadow-xs">
                             <div className="flex items-center justify-between">
                                 <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
-                                    Validasi Dokumen
+                                    Status Akun
                                 </span>
                                 <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -280,9 +184,9 @@ export default function Dashboard({ auth, stats = {}, recentSignatures = [], adm
                                     </svg>
                                 </div>
                             </div>
-                            <p className="text-2xl font-bold text-slate-800 dark:text-white mt-2">Tervalidasi</p>
+                            <p className="text-2xl font-bold text-slate-800 dark:text-white mt-2">Aktif</p>
                             <p className="text-[11px] text-slate-500 mt-2 pt-2 border-t border-slate-100 dark:border-gray-700">
-                                Terverifikasi QR Kriptografis
+                                Prefix TTE: <strong className="text-slate-700 dark:text-slate-300 font-mono">{user.signature_prefix || 'DS'}</strong>
                             </p>
                         </div>
                     )}
@@ -433,7 +337,7 @@ export default function Dashboard({ auth, stats = {}, recentSignatures = [], adm
                                 PDF Tools Suite
                             </h2>
                             <p className="text-xs text-slate-500 mt-0.5">
-                                Perkakas manipulasi dokumen PDF dengan pemrosesan langsung di peramban (Zero-Server).
+                                Perkakas manipulasi dokumen PDF dengan pemrosesan langsung di peramban.
                             </p>
                         </div>
 
@@ -501,7 +405,7 @@ export default function Dashboard({ auth, stats = {}, recentSignatures = [], adm
                                     <div className="flex items-center justify-between mb-3">
                                         <div className="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                {tool.icon}
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={tool.iconPath}></path>
                                             </svg>
                                         </div>
                                         <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">
@@ -517,10 +421,7 @@ export default function Dashboard({ auth, stats = {}, recentSignatures = [], adm
                                 </div>
 
                                 <div className="mt-3 pt-2.5 border-t border-slate-200/60 dark:border-gray-600/40 flex items-center justify-between text-[11px] font-semibold text-blue-600 dark:text-blue-400">
-                                    <span>Buka</span>
-                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                                    </svg>
+                                    <span>Gunakan Perkakas</span>
                                 </div>
                             </Link>
                         ))}
@@ -589,7 +490,7 @@ export default function Dashboard({ auth, stats = {}, recentSignatures = [], adm
                                                 </div>
                                             </td>
                                             <td className="py-2.5 px-3 text-slate-600 dark:text-slate-300 font-medium">
-                                                {sig.document_number || '—'}
+                                                {sig.document_number || '-'}
                                             </td>
                                             <td className="py-2.5 px-3">
                                                 <button

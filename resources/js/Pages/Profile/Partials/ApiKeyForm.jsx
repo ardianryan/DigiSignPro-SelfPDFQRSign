@@ -79,7 +79,7 @@ export default function ApiKeyForm({
                         <input
                             type={visible ? 'text' : 'password'}
                             readOnly
-                            value={apiKey || '—'}
+                            value={apiKey || '-'}
                             className="flex-1 border border-slate-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-xs font-mono focus:outline-none"
                         />
                         <button

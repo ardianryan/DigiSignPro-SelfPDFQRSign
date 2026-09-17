@@ -162,7 +162,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                         route().current('sign.bulk.create') ? 'text-blue-500 font-medium' : 'text-slate-500 hover:text-white'
                                     }`}
                                 >
-                                    Bulk Sign (Massal)
+                                    Tanda Tangan Massal
                                 </Link>
                                 <Link
                                     href={route('sign.qr.index')}
@@ -171,7 +171,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                         route().current('sign.qr.index') || route().current('sign.qr.create') ? 'text-blue-500 font-medium' : 'text-slate-500 hover:text-white'
                                     }`}
                                 >
-                                    TTE QR (Manual)
+                                    TTE QR Manual
                                 </Link>
                             </div>
                         )}
@@ -220,7 +220,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                         route().current('tools.merge') ? 'text-purple-400 font-medium' : 'text-slate-500 hover:text-white'
                                     }`}
                                 >
-                                    Merge (Gabung PDF)
+                                    Merge PDF
                                 </Link>
                                 <Link
                                     href={route('tools.split')}
@@ -229,7 +229,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                         route().current('tools.split') ? 'text-purple-400 font-medium' : 'text-slate-500 hover:text-white'
                                     }`}
                                 >
-                                    Split (Pisah PDF)
+                                    Split PDF
                                 </Link>
                                 <Link
                                     href={route('tools.organize')}

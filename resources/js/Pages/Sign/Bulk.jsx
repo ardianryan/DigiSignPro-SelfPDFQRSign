@@ -536,7 +536,7 @@ export default function Bulk({ auth, max_upload_size_bulk }) {
                                         <div className="relative inline-block min-w-full">
                                         <canvas ref={canvasRef} id="pdf-render" className="shadow-lg mx-auto block bg-white" />
 
-                                        {/* Drag Marker — matches final PDF QR stamp size (25mm) */}
+                                        {/* Drag Marker - matches final PDF QR stamp size (25mm) */}
                                         <div
                                             ref={markerRef}
                                             id="qr-marker"

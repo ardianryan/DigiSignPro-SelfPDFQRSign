@@ -35,7 +35,7 @@ export default function Verify({ status, signature, token, message }) {
                                     <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">
                                         Ditandatangani secara elektronik oleh
                                     </p>
-                                    <p className="font-bold text-slate-800">{signature.user?.name || '—'}</p>
+                                    <p className="font-bold text-slate-800">{signature.user?.name || '-'}</p>
                                     <p className="text-sm text-slate-600">{signature.user?.position || 'Staff'}</p>
                                 </div>
                             </div>

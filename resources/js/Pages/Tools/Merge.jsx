@@ -174,7 +174,7 @@ export default function MergePdf({ auth }) {
                         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-slate-200 dark:border-gray-700 shadow-sm mb-6">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-sm font-bold text-slate-800 dark:text-white">
-                                    Daftar File ({files.length}) — Urutkan Sesuai Keinginan
+                                    Daftar Berkas ({files.length}): Atur Urutan Sesuai Kebutuhan
                                 </h3>
                                 <button
                                     onClick={() => setFiles([])}

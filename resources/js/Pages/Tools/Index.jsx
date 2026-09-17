@@ -1,109 +1,13 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
+import { getPdfTools } from '@/Constants/pdfTools';
 
 export default function ToolsIndex({ auth }) {
     const [filterCategory, setFilterCategory] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
 
-    const tools = [
-        {
-            id: 'editor',
-            title: 'Visual PDF Editor',
-            category: 'editor',
-            categoryLabel: 'Editor Visual',
-            description: 'Ubah teks, tempel stempel atau paraf tanda tangan, tutup teks lama (whiteout), dan coretan.',
-            iconBg: 'from-blue-600 to-indigo-600',
-            href: route('tools.editor'),
-            icon: (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
-            )
-        },
-        {
-            id: 'merge',
-            title: 'Merge PDF',
-            category: 'organize',
-            categoryLabel: 'Tata Letak',
-            description: 'Gabungkan beberapa file PDF menjadi satu dokumen berurutan secara instan.',
-            iconBg: 'from-slate-700 to-slate-800',
-            href: route('tools.merge'),
-            icon: (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path>
-            )
-        },
-        {
-            id: 'split',
-            title: 'Split PDF',
-            category: 'organize',
-            categoryLabel: 'Tata Letak',
-            description: 'Pisahkan halaman PDF menjadi file terpisah atau ekstrak rentang halaman tertentu.',
-            iconBg: 'from-slate-700 to-slate-800',
-            href: route('tools.split'),
-            icon: (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
-            )
-        },
-        {
-            id: 'organize',
-            title: 'Organize & Rotate',
-            category: 'organize',
-            categoryLabel: 'Tata Letak',
-            description: 'Atur susunan urutan halaman, putar sudut orientasi, dan hapus halaman yang tidak diperlukan.',
-            iconBg: 'from-slate-700 to-slate-800',
-            href: route('tools.organize'),
-            icon: (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-            )
-        },
-        {
-            id: 'image-to-pdf',
-            title: 'Image to PDF',
-            category: 'convert',
-            categoryLabel: 'Konversi',
-            description: 'Ubah foto JPG, PNG, atau WebP menjadi satu dokumen PDF dengan pengaturan ukuran kertas.',
-            iconBg: 'from-slate-700 to-slate-800',
-            href: route('tools.image_to_pdf'),
-            icon: (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-            )
-        },
-        {
-            id: 'watermark',
-            title: 'Watermark PDF',
-            category: 'security',
-            categoryLabel: 'Keamanan & Dokumen',
-            description: 'Tambahkan stempel teks atau logo transparan dengan kustomisasi sudut rotasi dan opasitas.',
-            iconBg: 'from-slate-700 to-slate-800',
-            href: route('tools.watermark'),
-            icon: (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path>
-            )
-        },
-        {
-            id: 'page-number',
-            title: 'Page Numbering',
-            category: 'security',
-            categoryLabel: 'Keamanan & Dokumen',
-            description: 'Sisipkan penomoran halaman otomatis pada header atau footer dokumen dengan beragam format.',
-            iconBg: 'from-slate-700 to-slate-800',
-            href: route('tools.page_number'),
-            icon: (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
-            )
-        },
-        {
-            id: 'protect',
-            title: 'Protect & Encrypt',
-            category: 'security',
-            categoryLabel: 'Keamanan & Dokumen',
-            description: 'Enkripsi dokumen PDF dengan password keamanan tinggi sebelum dibagikan.',
-            iconBg: 'from-slate-700 to-slate-800',
-            href: route('tools.protect'),
-            icon: (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-            )
-        }
-    ];
+    const tools = getPdfTools();
 
     const filteredTools = tools.filter(tool => {
         const matchesCategory = filterCategory === 'all' || tool.category === filterCategory;
@@ -114,31 +18,28 @@ export default function ToolsIndex({ auth }) {
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold leading-tight text-slate-800 dark:text-slate-200">Bento PDF Suite & Tools</h2>}
+            header={<h2 className="text-xl font-semibold leading-tight text-slate-800 dark:text-slate-200">Perkakas Dokumen PDF</h2>}
         >
-            <Head title="PDF Tools Suite" />
+            <Head title="Perkakas Dokumen PDF" />
 
             <div className="py-6">
                 <div className="mx-auto max-w-7xl">
-                    {/* Hero Banner with Privacy Guarantee Badge */}
-                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-8 text-white shadow-xl mb-8 border border-slate-800">
-                        <div className="relative z-10 max-w-3xl">
-                            <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-300 border border-emerald-500/30 mb-4 backdrop-blur-sm">
-                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    {/* Hero Banner with Privacy Guarantee */}
+                    <div className="rounded-2xl bg-slate-900 p-8 text-white shadow-sm mb-8 border border-slate-800">
+                        <div className="max-w-3xl">
+                            <div className="inline-flex items-center gap-2 rounded-md bg-slate-800 px-3 py-1 text-xs font-semibold text-emerald-400 border border-slate-700 mb-4">
+                                <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
                                 </svg>
-                                100% In-Browser In-Memory Engine (Zero Server Load & Zero S3 Storage)
+                                Pemrosesan Langsung di Peramban
                             </div>
-                            <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
-                                All-in-One PDF Suite & Editor
+                            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+                                Kelola dan Manipulasi Dokumen PDF
                             </h1>
-                            <p className="mt-3 text-slate-300 text-sm sm:text-base leading-relaxed">
-                                Gabungkan, pisahkan, atur ulang halaman, ubah gambar, tambahkan watermark, dan enkripsi PDF Anda secara instan. Seluruh proses manipulasi berjalan langsung di memori browser Anda untuk menjaga kerahasiaan dokumen 100%.
+                            <p className="mt-2 text-slate-300 text-sm leading-relaxed">
+                                Gabungkan, pisahkan, susun ulang halaman, konversi gambar, bubuhkan watermark, serta amankan PDF Anda. Seluruh proses manipulasi berjalan langsung di memori browser Anda untuk menjaga kerahasiaan berkas.
                             </p>
                         </div>
-                        {/* Decorative Background Glow */}
-                        <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-blue-500/10 blur-3xl"></div>
-                        <div className="absolute right-40 -bottom-20 h-64 w-64 rounded-full bg-purple-500/10 blur-3xl"></div>
                     </div>
 
                     {/* Filter & Search Controls */}
@@ -213,9 +114,9 @@ export default function ToolsIndex({ auth }) {
                             >
                                 <div>
                                     <div className="flex items-center justify-between mb-4">
-                                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-tr ${tool.iconBg} text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform`}>
+                                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-tr ${tool.iconBg} text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform`}>
                                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                {tool.icon}
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={tool.iconPath}></path>
                                             </svg>
                                         </div>
                                         {tool.badge && (
@@ -235,11 +136,8 @@ export default function ToolsIndex({ auth }) {
                                     </p>
                                 </div>
 
-                                <div className="mt-6 pt-4 border-t border-slate-100 dark:border-gray-700/60 flex items-center justify-between text-xs font-semibold text-blue-600 dark:text-blue-400 group-hover:translate-x-1 transition-transform">
-                                    <span>Buka Tool</span>
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
-                                    </svg>
+                                <div className="mt-6 pt-4 border-t border-slate-100 dark:border-gray-700/60 flex items-center justify-between text-xs font-semibold text-blue-600 dark:text-blue-400">
+                                    <span>Gunakan Perkakas</span>
                                 </div>
                             </Link>
                         ))}
