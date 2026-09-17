@@ -197,7 +197,7 @@ class BulkSignController extends Controller
                 copy('zip://'.$originalZipPath.'#'.$filename, $tempPdfPath);
 
                 try {
-                    $verifyCode = $userPrefix.'-BLK-'.date('Ymd').'-'.strtoupper(substr(md5(uniqid()), 0, 6));
+                    $verifyCode = $userPrefix.'-BLK-'.date('Ymd').'-'.strtoupper(bin2hex(random_bytes(6)));
                     $verifyUrl = route('verify', ['code' => $verifyCode]);
                     $qrTempFile = QrCodeHelper::toTempFile($verifyUrl, $tempDir, 5);
 

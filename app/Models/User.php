@@ -42,13 +42,21 @@ class User extends Authenticatable
         return 'digi_'.Str::random(48);
     }
 
+    public static function hashApiKey(string $plainKey): string
+    {
+        return hash('sha256', $plainKey);
+    }
+
     public function ensureApiKey(): string
     {
         if (empty($this->api_key)) {
+            $plain = static::generateApiKey();
             $this->forceFill([
-                'api_key' => static::generateApiKey(),
+                'api_key' => static::hashApiKey($plain),
                 'api_key_created_at' => now(),
             ])->save();
+
+            return $plain;
         }
 
         return $this->api_key;

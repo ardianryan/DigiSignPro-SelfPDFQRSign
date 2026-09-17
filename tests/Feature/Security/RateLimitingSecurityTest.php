@@ -11,7 +11,20 @@ test('api public docs rate limit triggers under heavy traffic', function () {
     $response->assertStatus(429);
 });
 
-test('public verify endpoint responds properly under normal traffic', function () {
-    $response = $this->getJson('/api/v1/verify/DS-NONEXISTENT-CODE');
-    $response->assertStatus(404);
+test('public verify web endpoint is throttled after 30 requests', function () {
+    for ($i = 0; $i < 30; $i++) {
+        $this->get('/verify/DS-RATE-LIMIT-CHECK');
+    }
+
+    $response = $this->get('/verify/DS-RATE-LIMIT-CHECK');
+    $response->assertStatus(429);
+});
+
+test('public verify api endpoint is throttled after 30 requests', function () {
+    for ($i = 0; $i < 30; $i++) {
+        $this->getJson('/api/v1/verify/DS-RATE-LIMIT-CHECK');
+    }
+
+    $response = $this->getJson('/api/v1/verify/DS-RATE-LIMIT-CHECK');
+    $response->assertStatus(429);
 });

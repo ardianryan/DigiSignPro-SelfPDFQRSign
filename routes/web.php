@@ -25,7 +25,9 @@ Route::get('/', function () {
 });
 
 // Public verify route
-Route::get('/verify/{code?}', [VerificationController::class, 'verify'])->name('verify');
+Route::get('/verify/{code?}', [VerificationController::class, 'verify'])
+    ->middleware('throttle:30,1')
+    ->name('verify');
 
 // 2. Authenticated user routes
 Route::middleware(['auth'])->group(function () {

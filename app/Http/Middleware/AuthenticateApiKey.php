@@ -21,7 +21,8 @@ class AuthenticateApiKey
             ], 401);
         }
 
-        $user = User::query()->where('api_key', $apiKey)->first();
+        $hash = hash('sha256', $apiKey);
+        $user = User::query()->where('api_key', $hash)->orWhere('api_key', $apiKey)->first();
 
         if (! $user) {
             return response()->json([
@@ -29,6 +30,11 @@ class AuthenticateApiKey
                 'message' => 'API key tidak valid.',
                 'error' => 'invalid_api_key',
             ], 401);
+        }
+
+        // Seamless auto-migration: if user matched via legacy plaintext key, upgrade to SHA-256 hash now
+        if ($user->api_key === $apiKey) {
+            $user->forceFill(['api_key' => $hash])->save();
         }
 
         // Bind authenticated user for controllers
@@ -53,10 +59,8 @@ class AuthenticateApiKey
             return $m[1];
         }
 
-        $query = $request->query('api_key');
-        if (is_string($query) && $query !== '') {
-            return $query;
-        }
+        // Security Hardening: Do NOT accept api_key via URL query parameters
+        // Query parameters leak to web server access logs, proxies, and browser history.
 
         return null;
     }

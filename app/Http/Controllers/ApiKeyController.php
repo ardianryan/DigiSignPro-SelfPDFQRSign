@@ -17,14 +17,16 @@ class ApiKeyController extends Controller
         ]);
 
         $user = $request->user();
+        $plainKey = \App\Models\User::generateApiKey();
+
         $user->forceFill([
-            'api_key' => 'digi_'.Str::random(48),
+            'api_key' => \App\Models\User::hashApiKey($plainKey),
             'api_key_created_at' => now(),
         ])->save();
 
         return redirect()
             ->route('profile.edit')
             ->with('status', 'api-key-regenerated')
-            ->with('api_key_plain', $user->api_key);
+            ->with('api_key_plain', $plainKey);
     }
 }

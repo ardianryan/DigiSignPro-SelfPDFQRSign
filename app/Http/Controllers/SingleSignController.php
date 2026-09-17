@@ -70,8 +70,8 @@ class SingleSignController extends Controller
             $signerPosition = $user->position ?? '';
             $userPrefix = $user->signature_prefix ?: 'DS';
 
-            // Generate Verify Code
-            $code = $userPrefix.'-'.date('Ymd').'-'.strtoupper(substr(md5(uniqid()), 0, 6));
+            // Generate Verify Code (High-entropy cryptographic random)
+            $code = $userPrefix.'-'.date('Ymd').'-'.strtoupper(bin2hex(random_bytes(6)));
 
             // Dynamic Verification URL
             $verifyUrl = route('verify', ['code' => $code]);

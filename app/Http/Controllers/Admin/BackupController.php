@@ -45,8 +45,13 @@ class BackupController extends Controller
             $tables = ['users', 'signatures', 'app_settings'];
             foreach ($tables as $table) {
                 if (Schema::hasTable($table)) {
-                    $rows = DB::table($table)->get()->map(function ($row) {
-                        return (array) $row;
+                    $rows = DB::table($table)->get()->map(function ($row) use ($table) {
+                        $arr = (array) $row;
+                        if ($table === 'users' && isset($arr['api_key'])) {
+                            $arr['api_key'] = '[PROTECTED_IN_BACKUP]';
+                        }
+
+                        return $arr;
                     })->toArray();
 
                     $jsonContent = json_encode($rows, JSON_PRETTY_PRINT);
@@ -101,6 +106,20 @@ class BackupController extends Controller
 
         $zip = new ZipArchive;
         if ($zip->open($request->file('backup_file')->getRealPath()) === true) {
+            // Security Hardening: Prevent Zip Slip / Directory Traversal attacks
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $filename = $zip->getNameIndex($i);
+                if (str_contains($filename, '..') || str_starts_with($filename, '/') || str_starts_with($filename, '\\')) {
+                    $zip->close();
+                    $this->cleanupDir($tempDir);
+
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Berkas cadangan mengandung jalur tidak aman (Zip Slip terdeteksi).',
+                    ], 422);
+                }
+            }
+
             $zip->extractTo($tempDir);
             $zip->close();
         } else {
@@ -121,6 +140,9 @@ class BackupController extends Controller
                         if ($data !== null) {
                             DB::table($table)->truncate();
                             foreach ($data as $row) {
+                                if ($table === 'users' && isset($row['api_key']) && $row['api_key'] === '[PROTECTED_IN_BACKUP]') {
+                                    $row['api_key'] = null;
+                                }
                                 DB::table($table)->insert($row);
                             }
                         }

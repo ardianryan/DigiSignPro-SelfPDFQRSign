@@ -64,7 +64,7 @@ class SignController extends BaseApiController
             $signerName = $user->name;
             $signerPosition = $user->position ?? '';
             $userPrefix = $user->signature_prefix ?: 'DS';
-            $code = $userPrefix.'-'.date('Ymd').'-'.strtoupper(substr(md5(uniqid()), 0, 6));
+            $code = $userPrefix.'-'.date('Ymd').'-'.strtoupper(bin2hex(random_bytes(6)));
             $verifyUrl = route('verify', ['code' => $code]);
 
             $tempDir = storage_path('app/temp');
@@ -204,7 +204,7 @@ class SignController extends BaseApiController
 
         $user = $this->apiUser($request);
         $prefix = $user->signature_prefix ?: 'DS';
-        $verifyCode = $prefix.'-TTE-'.date('Ymd').'-'.strtoupper(substr(md5(uniqid()), 0, 6));
+        $verifyCode = $prefix.'-TTE-'.date('Ymd').'-'.strtoupper(bin2hex(random_bytes(6)));
         $signedAt = ($request->input('signed_at') ?: date('Y-m-d')).' '.date('H:i:s');
         $subject = $request->input('subject');
 

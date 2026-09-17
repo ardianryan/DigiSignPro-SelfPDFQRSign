@@ -84,7 +84,7 @@ class SettingController extends Controller
             's3_region' => 'nullable|string',
             's3_access_key' => 'nullable|string',
             's3_secret_key' => 'nullable|string',
-            's3_endpoint' => 'nullable|string',
+            's3_endpoint' => ['nullable', 'url', 'regex:/^https?:\/\//i'],
             's3_public_url' => 'nullable|string',
             's3_directory' => 'nullable|string',
         ]);
@@ -141,8 +141,21 @@ class SettingController extends Controller
             's3_region' => 'required|string',
             's3_access_key' => 'required|string',
             's3_secret_key' => 'required|string',
-            's3_endpoint' => 'nullable|string',
+            's3_endpoint' => ['nullable', 'url', 'regex:/^https?:\/\//i'],
         ]);
+
+        $endpoint = $request->input('s3_endpoint');
+        if (! empty($endpoint)) {
+            $parsed = parse_url($endpoint);
+            $host = $parsed['host'] ?? '';
+            // Security Hardening: Prevent SSRF against loopback, private IPv4, and cloud metadata (AWS IMDSv1)
+            if (in_array(strtolower($host), ['localhost', '127.0.0.1', '::1', '169.254.169.254', 'metadata.google.internal'])) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Endpoint S3 tidak diizinkan merujuk ke alamat lokal atau metadata cloud.',
+                ], 422);
+            }
+        }
 
         try {
             config([

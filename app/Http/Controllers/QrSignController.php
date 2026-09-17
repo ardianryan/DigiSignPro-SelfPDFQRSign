@@ -100,7 +100,7 @@ class QrSignController extends Controller
 
             $user = $request->user();
             $prefix = $user->signature_prefix ?: 'DS';
-            $verifyCode = $prefix.'-TTE-'.date('Ymd').'-'.strtoupper(substr(md5(uniqid()), 0, 6));
+            $verifyCode = $prefix.'-TTE-'.date('Ymd').'-'.strtoupper(bin2hex(random_bytes(6)));
 
             $signedTimestamp = $request->input('signed_at').' '.date('H:i:s');
 

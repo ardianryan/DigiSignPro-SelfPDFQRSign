@@ -39,6 +39,7 @@
 /.zed
 
 # Dependencies & Build artifacts
+/.security-audit/
 /node_modules
 /public/fonts-manifest.dev.json
 /public/hot

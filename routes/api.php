@@ -19,7 +19,9 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1')->group(function () {
     // Public
     Route::get('/health', [HealthController::class, 'show'])->name('api.v1.health');
-    Route::get('/verify/{code}', [VerifyController::class, 'show'])->name('api.v1.verify');
+    Route::get('/verify/{code}', [VerifyController::class, 'show'])
+        ->middleware('throttle:30,1')
+        ->name('api.v1.verify');
     Route::get('/docs/quickapi.md', [ApiDocsController::class, 'quickapiPublic'])
         ->middleware('throttle:30,1')
         ->name('api.v1.docs.quickapi');

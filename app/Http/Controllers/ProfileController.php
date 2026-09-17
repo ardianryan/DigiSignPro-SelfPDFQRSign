@@ -20,12 +20,21 @@ class ProfileController extends Controller
     {
         $user = $request->user();
         // Ensure every user has an API key for REST integrations
-        $user->ensureApiKey();
+        $plainKey = $user->ensureApiKey();
+
+        $displayKey = session('api_key_plain');
+        if (! $displayKey) {
+            if ($user->api_key && str_starts_with($user->api_key, 'digi_')) {
+                $displayKey = $user->api_key;
+            } else {
+                $displayKey = $user->api_key ? 'digi_••••••••••••••••••••••••' : null;
+            }
+        }
 
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $user instanceof MustVerifyEmail,
             'status' => session('status'),
-            'apiKey' => $user->api_key,
+            'apiKey' => $displayKey,
             'apiKeyCreatedAt' => $user->api_key_created_at?->toIso8601String(),
             'apiBaseUrl' => url('/api/v1'),
             'quickapiUrl' => route('profile.api_docs.quickapi'),
